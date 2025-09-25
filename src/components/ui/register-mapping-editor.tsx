@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Save, Download, Upload } from "lucide-react";
+import { Plus, Trash2, Save, Download, Upload, AlertTriangle } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
+import { Textarea } from "@/components/ui/textarea";
 
 interface RegisterMapping {
   id: string;
@@ -20,6 +21,12 @@ interface RegisterMapping {
   normalRangeMin: number;
   normalRangeMax: number;
   isImportant: boolean;
+  // 新增字段
+  scale: number; // 比例 A
+  offset: number; // 偏移 B
+  formulaDescription: string; // 公式说明
+  probeScript: string; // Probe脚本条件
+  deviceName: string; // 设备名称
 }
 
 interface RegisterTable {
@@ -45,7 +52,12 @@ const RegisterMappingEditor = () => {
           unit: '°C',
           normalRangeMin: 0,
           normalRangeMax: 100,
-          isImportant: true
+          isImportant: true,
+          scale: 0.1,
+          offset: 0,
+          formulaDescription: 'y = 0.1 * x + 0，其中x为原始寄存器值，y为实际温度值',
+          probeScript: 'temperature >= 60 and temperature <= 80',
+          deviceName: '温度传感器 A1'
         },
         {
           id: '2',
@@ -56,7 +68,12 @@ const RegisterMappingEditor = () => {
           unit: '%',
           normalRangeMin: 0,
           normalRangeMax: 100,
-          isImportant: false
+          isImportant: false,
+          scale: 0.1,
+          offset: 0,
+          formulaDescription: 'y = 0.1 * x + 0，其中x为原始寄存器值，y为实际湿度值',
+          probeScript: 'humidity >= 30 and humidity <= 70',
+          deviceName: '湿度传感器 C3'
         }
       ]
     },
@@ -74,7 +91,12 @@ const RegisterMappingEditor = () => {
           unit: 'V',
           normalRangeMin: 210,
           normalRangeMax: 230,
-          isImportant: true
+          isImportant: true,
+          scale: 0.1,
+          offset: 0,
+          formulaDescription: 'y = 0.1 * x + 0，其中x为原始寄存器值，y为实际电压值',
+          probeScript: 'voltage >= 210 and voltage <= 230',
+          deviceName: '电压监测器 B2'
         },
         {
           id: '4',
@@ -85,18 +107,12 @@ const RegisterMappingEditor = () => {
           unit: 'A',
           normalRangeMin: 0,
           normalRangeMax: 10,
-          isImportant: true
-        },
-        {
-          id: '5',
-          name: '功率',
-          address: 40005,
-          dataType: 'float32',
-          description: '当前功率值',
-          unit: 'W',
-          normalRangeMin: 0,
-          normalRangeMax: 1000,
-          isImportant: false
+          isImportant: true,
+          scale: 0.01,
+          offset: 0,
+          formulaDescription: 'y = 0.01 * x + 0，其中x为原始寄存器值，y为实际电流值',
+          probeScript: 'current >= 1 and current <= 8',
+          deviceName: '电流传感器 D4'
         }
       ]
     }
@@ -111,14 +127,27 @@ const RegisterMappingEditor = () => {
     unit: '',
     normalRangeMin: 0,
     normalRangeMax: 100,
-    isImportant: false
+    isImportant: false,
+    scale: 1.0,
+    offset: 0,
+    formulaDescription: '',
+    probeScript: '',
+    deviceName: ''
   });
+
+  const [devices] = useState([
+    { id: 'dev1', name: '温度传感器 A1' },
+    { id: 'dev2', name: '电压监测器 B2' },
+    { id: 'dev3', name: '湿度传感器 C3' },
+    { id: 'dev4', name: '电流传感器 D4' },
+    { id: 'dev5', name: '功率计 E5' }
+  ]);
 
   const activeTable = tables.find(table => table.id === activeTableId);
 
   const handleAddMapping = () => {
-    if (!newMapping.name) {
-      showError('请输入寄存器名称');
+    if (!newMapping.name || !newMapping.deviceName) {
+      showError('请输入寄存器名称和设备名称');
       return;
     }
 
@@ -141,7 +170,12 @@ const RegisterMappingEditor = () => {
       unit: '',
       normalRangeMin: 0,
       normalRangeMax: 100,
-      isImportant: false
+      isImportant: false,
+      scale: 1.0,
+      offset: 0,
+      formulaDescription: '',
+      probeScript: '',
+      deviceName: ''
     });
 
     showSuccess('寄存器映射添加成功');
@@ -187,6 +221,12 @@ const RegisterMappingEditor = () => {
       };
       reader.readAsText(file);
     }
+  };
+
+  const validateProbeScript = (script: string) => {
+    // 简单验证probe脚本是否包含基本的条件操作符
+    const validOperators = ['>=', '<=', '>', '<', '==', '!=', 'and', 'or', '='];
+    return validOperators.some(op => script.includes(op));
   };
 
   return (
@@ -325,6 +365,81 @@ const RegisterMappingEditor = () => {
                   </div>
                 </div>
               </div>
+
+              {/* 新增的变换参数配置 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="space-y-2">
+                  <Label htmlFor="scale">比例系数 (A)</Label>
+                  <Input
+                    id="scale"
+                    type="number"
+                    step="0.001"
+                    placeholder="1.0"
+                    value={newMapping.scale}
+                    onChange={(e) => setNewMapping({ ...newMapping, scale: parseFloat(e.target.value) || 1.0 })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="offset">偏移量 (B)</Label>
+                  <Input
+                    id="offset"
+                    type="number"
+                    step="0.001"
+                    placeholder="0"
+                    value={newMapping.offset}
+                    onChange={(e) => setNewMapping({ ...newMapping, offset: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="deviceName">设备名称 *</Label>
+                  <Select
+                    value={newMapping.deviceName}
+                    onValueChange={(value) => setNewMapping({ ...newMapping, deviceName: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择设备名称" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {devices.map(device => (
+                        <SelectItem key={device.id} value={device.name}>
+                          {device.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2 mb-4">
+                <Label htmlFor="formulaDescription">公式说明</Label>
+                <Textarea
+                  id="formulaDescription"
+                  placeholder="y = A * x + B，其中x为原始寄存器值，y为实际物理量"
+                  value={newMapping.formulaDescription}
+                  onChange={(e) => setNewMapping({ ...newMapping, formulaDescription: e.target.value })}
+                  className="min-h-[60px]"
+                />
+              </div>
+
+              <div className="space-y-2 mb-4">
+                <Label htmlFor="probeScript">Probe脚本条件</Label>
+                <div className="relative">
+                  <Textarea
+                    id="probeScript"
+                    placeholder="temperature >= 60 and temperature <= 80"
+                    value={newMapping.probeScript}
+                    onChange={(e) => setNewMapping({ ...newMapping, probeScript: e.target.value })}
+                    className="min-h-[80px] font-mono"
+                  />
+                  {!validateProbeScript(newMapping.probeScript) && newMapping.probeScript && (
+                    <AlertTriangle className="absolute top-2 right-2 h-4 w-4 text-yellow-500" />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  支持的操作符: =, {'>='}, {'<='}, {'>'}, {'<'}, ==, !=, and, or
+                </p>
+              </div>
+
               <Button onClick={handleAddMapping} className="w-full">
                 <Plus className="mr-2 h-4 w-4" />
                 添加寄存器映射
@@ -344,10 +459,12 @@ const RegisterMappingEditor = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>名称</TableHead>
+                  <TableHead>设备</TableHead>
                   <TableHead>地址</TableHead>
                   <TableHead>数据类型</TableHead>
                   <TableHead>单位</TableHead>
-                  <TableHead>正常范围</TableHead>
+                  <TableHead>变换</TableHead>
+                  <TableHead>Probe条件</TableHead>
                   <TableHead>重要参数</TableHead>
                   <TableHead>操作</TableHead>
                 </TableRow>
@@ -356,10 +473,16 @@ const RegisterMappingEditor = () => {
                 {activeTable.mappings.map((mapping) => (
                   <TableRow key={mapping.id}>
                     <TableCell className="font-medium">{mapping.name}</TableCell>
+                    <TableCell>{mapping.deviceName}</TableCell>
                     <TableCell>{mapping.address}</TableCell>
                     <TableCell>{mapping.dataType.toUpperCase()}</TableCell>
                     <TableCell>{mapping.unit}</TableCell>
-                    <TableCell>{mapping.normalRangeMin} - {mapping.normalRangeMax}</TableCell>
+                    <TableCell className="text-xs">
+                      y = {mapping.scale}x + {mapping.offset}
+                    </TableCell>
+                    <TableCell className="text-xs max-w-xs truncate" title={mapping.probeScript}>
+                      {mapping.probeScript || '-'}
+                    </TableCell>
                     <TableCell>
                       {mapping.isImportant ? '是' : '否'}
                     </TableCell>
