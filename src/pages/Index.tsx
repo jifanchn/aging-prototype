@@ -16,17 +16,45 @@ import {
   CheckCircle,
   XCircle,
   PauseCircle,
-  Home
+  Wifi,
+  Link
 } from "lucide-react";
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import NavigationMenu from "@/components/ui/navigation-menu";
 
-// Mock data for demonstration
+// Mock data reflecting the correct relationships
 const mockWorkstations = [
-  { id: 1, name: "工位 A1", status: "running", devices: 12 },
-  { id: 2, name: "工位 B2", status: "passed", devices: 8 },
-  { id: 3, name: "工位 C3", status: "failed", devices: 5 },
-  { id: 4, name: "工位 D4", status: "stopped", devices: 15 },
+  { 
+    id: 1, 
+    name: "工位 A1", 
+    status: "running", 
+    devices: 2,
+    availableProcesses: 2,
+    onlineDevices: 2
+  },
+  { 
+    id: 2, 
+    name: "工位 B2", 
+    status: "passed", 
+    devices: 2,
+    availableProcesses: 1,
+    onlineDevices: 2
+  },
+  { 
+    id: 3, 
+    name: "工位 C3", 
+    status: "failed", 
+    devices: 1,
+    availableProcesses: 0,
+    onlineDevices: 0
+  },
+  { 
+    id: 4, 
+    name: "工位 D4", 
+    status: "stopped", 
+    devices: 3,
+    availableProcesses: 1,
+    onlineDevices: 2
+  },
 ];
 
 const getStatusColor = (status: string) => {
@@ -55,42 +83,42 @@ const OperatorDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">运行中工位</CardTitle>
+            <CardTitle className="text-sm font-medium">在线设备</CardTitle>
+            <Wifi className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">8/10</div>
+            <p className="text-xs text-muted-foreground">设备连接状态</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">可用工位</CardTitle>
+            <Link className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">3/4</div>
+            <p className="text-xs text-muted-foreground">满足设备要求</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">运行中流程</CardTitle>
             <Play className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">+2 from last hour</p>
+            <div className="text-2xl font-bold">2</div>
+            <p className="text-xs text-muted-foreground">并行老化流程</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">老化通过</CardTitle>
+            <CardTitle className="text-sm font-medium">系统健康</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">45</div>
-            <p className="text-xs text-muted-foreground">+8 today</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">老化失败</CardTitle>
-            <XCircle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">-1 from yesterday</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">连接设备</CardTitle>
-            <Monitor className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">287</div>
-            <p className="text-xs text-muted-foreground">out of 300</p>
+            <div className="text-2xl font-bold">正常</div>
+            <p className="text-xs text-muted-foreground">所有服务运行中</p>
           </CardContent>
         </Card>
       </div>
@@ -106,7 +134,14 @@ const OperatorDashboard = () => {
                 <div className="flex items-center space-x-4">
                   <div className={`w-3 h-3 rounded-full ${getStatusColor(workstation.status)}`}></div>
                   <span className="font-medium">{workstation.name}</span>
-                  <Badge variant="secondary">{workstation.devices} devices</Badge>
+                  <div className="flex space-x-2">
+                    <Badge variant="secondary">
+                      {workstation.onlineDevices}/{workstation.devices} 设备在线
+                    </Badge>
+                    <Badge variant="outline">
+                      {workstation.availableProcesses} 流程可用
+                    </Badge>
+                  </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   {getStatusIcon(workstation.status)}
@@ -126,29 +161,51 @@ const EngineerDashboard = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>设备配置管理</CardTitle>
+          <CardTitle>设备-工位-老化关系管理</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button className="h-16">
-              <Settings className="mr-2 h-4 w-4" />
-              设备配置向导
-            </Button>
-            <Button className="h-16">
-              <Monitor className="mr-2 h-4 w-4" />
-              混合流程配置器
-            </Button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <Wifi className="h-5 w-5 text-blue-500" />
+                <span className="font-medium">设备配置</span>
+              </div>
+              <p className="text-sm text-muted-foreground">配置 Modbus/CAN 设备连接参数</p>
+              <Button variant="outline" size="sm" className="mt-2">配置设备</Button>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <Link className="h-5 w-5 text-green-500" />
+                <span className="font-medium">工位映射</span>
+              </div>
+              <p className="text-sm text-muted-foreground">将设备映射到工位</p>
+              <Button variant="outline" size="sm" className="mt-2">管理映射</Button>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <Settings className="h-5 w-5 text-purple-500" />
+                <span className="font-medium">老化配置</span>
+              </div>
+              <p className="text-sm text-muted-foreground">为工位配置老化流程</p>
+              <Button variant="outline" size="sm" className="mt-2">配置流程</Button>
+            </div>
           </div>
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>工位关系管理</CardTitle>
+          <CardTitle>关系验证</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">管理工位 ↔ 老化配置 ↔ 设备的多层映射关系</p>
-          <div className="mt-4">
-            <Button>编辑关系</Button>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <span>工位 A1 - 所有设备在线，2个流程可用</span>
+              <CheckCircle className="h-5 w-5 text-green-500" />
+            </div>
+            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+              <span>工位 C3 - 设备离线，无法启动老化流程</span>
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -166,29 +223,34 @@ const AdminDashboard = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 bg-muted rounded-lg">
-              <h3 className="font-medium">CPU 使用率</h3>
-              <p className="text-2xl font-bold">45%</p>
+              <h3 className="font-medium">设备总数</h3>
+              <p className="text-2xl font-bold">10</p>
             </div>
             <div className="p-4 bg-muted rounded-lg">
-              <h3 className="font-medium">内存使用</h3>
-              <p className="text-2xl font-bold">2.1 GB</p>
+              <h3 className="font-medium">工位总数</h3>
+              <p className="text-2xl font-bold">4</p>
             </div>
             <div className="p-4 bg-muted rounded-lg">
-              <h3 className="font-medium">活跃连接</h3>
-              <p className="text-2xl font-bold">287/300</p>
+              <h3 className="font-medium">老化流程</h3>
+              <p className="text-2xl font-bold">3</p>
             </div>
           </div>
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>批量操作</CardTitle>
+          <CardTitle>关系统计</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline">批量导入工位</Button>
-            <Button variant="outline">批量导入配置</Button>
-            <Button variant="outline">批量导入设备</Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 border rounded-lg">
+              <h4 className="font-medium mb-2">设备-工位映射</h4>
+              <p>8/10 设备已映射到工位</p>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <h4 className="font-medium mb-2">工位-老化映射</h4>
+              <p>4/4 工位配置了老化流程</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -201,23 +263,24 @@ const AnalystDashboard = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>数据分析仪表板</CardTitle>
+          <CardTitle>关系数据分析</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-            <p className="text-muted-foreground">图表展示区域</p>
+            <p className="text-muted-foreground">设备-工位-老化关系图谱</p>
           </div>
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>质量追溯</CardTitle>
+          <CardTitle>配置有效性分析</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <p>老化失败统计: 3次 (本周)</p>
-            <p>平均老化时间: 4.2小时</p>
-            <p>设备故障率: 1.2%</p>
+            <p>• 工位 A1: 配置完整，运行正常</p>
+            <p>• 工位 B2: 配置完整，运行正常</p>
+            <p>• 工位 C3: 设备离线，配置无效</p>
+            <p>• 工位 D4: 部分设备离线，流程受限</p>
           </div>
         </CardContent>
       </Card>
@@ -263,9 +326,7 @@ const Index = () => {
       </div>
       
       <div className="container mx-auto py-6">
-        <NavigationMenu />
-        
-        <Tabs value={activeRole} onValueChange={setActiveRole} className="mb-6 mt-4">
+        <Tabs value={activeRole} onValueChange={setActiveRole} className="mb-6">
           <TabsList>
             <TabsTrigger value="operator" className="flex items-center space-x-2">
               {getRoleIcon('operator')}
