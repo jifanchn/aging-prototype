@@ -730,22 +730,27 @@ const WorkstationManagement = () => {
                   status={workstation.status}
                   deviceCount={workstation.deviceCount}
                   onDetailsClick={() => handleViewDetails(workstation)}
-                  onControlClick={(action) => {
-                    switch(action) {
-                      case 'start':
-                        handleStartWorkstation(workstation.name);
-                        break;
-                      case 'stop':
-                        handleStopWorkstation(workstation.name);
-                        break;
-                      case 'edit':
-                        handleEditWorkstation(workstation.name);
-                        break;
-                      case 'delete':
-                        handleDeleteWorkstation(workstation.name);
-                        break;
-                      default:
-                        break;
+                  onActionClick={() => {
+                    // Since onActionClick expects no parameters, we'll show a context menu or dialog
+                    // to let the user choose the action
+                    const action = window.prompt('选择操作: start, stop, edit, delete');
+                    if (action) {
+                      switch(action.toLowerCase()) {
+                        case 'start':
+                          handleStartWorkstation(workstation.name);
+                          break;
+                        case 'stop':
+                          handleStopWorkstation(workstation.name);
+                          break;
+                        case 'edit':
+                          handleEditWorkstation(workstation.name);
+                          break;
+                        case 'delete':
+                          handleDeleteWorkstation(workstation.name);
+                          break;
+                        default:
+                          break;
+                      }
                     }
                   }}
                 />
