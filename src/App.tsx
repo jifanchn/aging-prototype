@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import WorkstationManagement from "./pages/WorkstationManagement";
 import ProtocolManagement from "./pages/ProtocolManagement";
 import AgingProcessManagement from "./pages/AgingProcessManagement";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/workstations" element={<WorkstationManagement />} />
           <Route path="/protocols" element={<ProtocolManagement />} />
           <Route path="/aging-processes" element={<AgingProcessManagement />} />
+          <Route path="/analytics" element={<Analytics />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

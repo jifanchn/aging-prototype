@@ -14,19 +14,105 @@ import {
   StopCircle
 } from "lucide-react";
 import WorkstationCard from "@/components/ui/workstation-card";
+import WorkstationDetailView from "@/components/ui/workstation-detail-view";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const WorkstationManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedWorkstation, setSelectedWorkstation] = useState<any>(null);
 
   const mockWorkstations = [
-    { id: 1, name: "工位 A1", status: "running", deviceCount: 12 },
-    { id: 2, name: "工位 B2", status: "passed", deviceCount: 8 },
-    { id: 3, name: "工位 C3", status: "failed", deviceCount: 5 },
-    { id: 4, name: "工位 D4", status: "stopped", deviceCount: 15 },
-    { id: 5, name: "工位 E5", status: "running", deviceCount: 10 },
-    { id: 6, name: "工位 F6", status: "stopped", deviceCount: 7 },
+    { 
+      id: 1, 
+      name: "工位 A1", 
+      status: "running", 
+      deviceCount: 12,
+      temperature: 65.5,
+      voltage: 220,
+      uptime: "2h 15m",
+      importantPoints: [
+        { name: "温度", value: 65.5, unit: "°C", normalRange: [60, 75] },
+        { name: "电压", value: 220, unit: "V", normalRange: [210, 230] },
+        { name: "电流", value: 2.3, unit: "A", normalRange: [2, 3] },
+        { name: "运行状态", value: true, unit: "", normalRange: [1, 1] }
+      ]
+    },
+    { 
+      id: 2, 
+      name: "工位 B2", 
+      status: "passed", 
+      deviceCount: 8,
+      temperature: 70.2,
+      voltage: 219,
+      uptime: "4h 30m",
+      importantPoints: [
+        { name: "温度", value: 70.2, unit: "°C", normalRange: [60, 75] },
+        { name: "电压", value: 219, unit: "V", normalRange: [210, 230] },
+        { name: "湿度", value: 45, unit: "%", normalRange: [30, 60] },
+        { name: "运行状态", value: false, unit: "", normalRange: [1, 1] }
+      ]
+    },
+    { 
+      id: 3, 
+      name: "工位 C3", 
+      status: "failed", 
+      deviceCount: 5,
+      temperature: 58.1,
+      voltage: 210,
+      uptime: "1h 20m",
+      importantPoints: [
+        { name: "温度", value: 58.1, unit: "°C", normalRange: [60, 75] },
+        { name: "电压", value: 210, unit: "V", normalRange: [210, 230] },
+        { name: "压力", value: 1.2, unit: "bar", normalRange: [1, 2] },
+        { name: "运行状态", value: true, unit: "", normalRange: [1, 1] }
+      ]
+    },
+    { 
+      id: 4, 
+      name: "工位 D4", 
+      status: "stopped", 
+      deviceCount: 15,
+      temperature: 25.0,
+      voltage: 220,
+      uptime: "0h 0m",
+      importantPoints: [
+        { name: "温度", value: 25.0, unit: "°C", normalRange: [60, 75] },
+        { name: "电压", value: 220, unit: "V", normalRange: [210, 230] },
+        { name: "风扇转速", value: 0, unit: "RPM", normalRange: [1000, 3000] },
+        { name: "运行状态", value: false, unit: "", normalRange: [1, 1] }
+      ]
+    },
+    { 
+      id: 5, 
+      name: "工位 E5", 
+      status: "running", 
+      deviceCount: 10,
+      temperature: 68.3,
+      voltage: 221,
+      uptime: "3h 10m",
+      importantPoints: [
+        { name: "温度", value: 68.3, unit: "°C", normalRange: [60, 75] },
+        { name: "电压", value: 221, unit: "V", normalRange: [210, 230] },
+        { name: "功率", value: 485, unit: "W", normalRange: [400, 600] },
+        { name: "运行状态", value: true, unit: "", normalRange: [1, 1] }
+      ]
+    },
+    { 
+      id: 6, 
+      name: "工位 F6", 
+      status: "stopped", 
+      deviceCount: 7,
+      temperature: 26.5,
+      voltage: 219,
+      uptime: "0h 0m",
+      importantPoints: [
+        { name: "温度", value: 26.5, unit: "°C", normalRange: [60, 75] },
+        { name: "电压", value: 219, unit: "V", normalRange: [210, 230] },
+        { name: "冷却液流量", value: 0, unit: "L/min", normalRange: [2, 5] },
+        { name: "运行状态", value: false, unit: "", normalRange: [1, 1] }
+      ]
+    },
   ];
 
   const filteredWorkstations = mockWorkstations.filter(ws => {
@@ -34,6 +120,14 @@ const WorkstationManagement = () => {
     const matchesFilter = filterStatus === 'all' || ws.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
+
+  const handleViewDetails = (workstation: any) => {
+    setSelectedWorkstation(workstation);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedWorkstation(null);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -92,7 +186,7 @@ const WorkstationManagement = () => {
               name={workstation.name}
               status={workstation.status as any}
               deviceCount={workstation.deviceCount}
-              onDetailsClick={() => console.log('View details for', workstation.name)}
+              onDetailsClick={() => handleViewDetails(workstation)}
               onActionClick={() => console.log('Action for', workstation.name)}
             />
           ))}
@@ -114,6 +208,13 @@ const WorkstationManagement = () => {
           </div>
         )}
       </div>
+      
+      {selectedWorkstation && (
+        <WorkstationDetailView 
+          workstation={selectedWorkstation} 
+          onClose={handleCloseDetails} 
+        />
+      )}
       
       <MadeWithDyad />
     </div>
