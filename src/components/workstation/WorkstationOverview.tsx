@@ -18,7 +18,14 @@ interface Workstation {
   id: number;
   name: string;
   status: 'running' | 'passed' | 'failed' | 'stopped';
-  deviceCount: number;
+  onlineDevices: Array<{
+    ip: string;
+    name: string;
+  }>;
+  logs: Array<{
+    timestamp: number;
+    content: string;
+  }>;
   temperature: number;
   voltage: number;
   uptime: string;
@@ -40,7 +47,17 @@ const WorkstationOverview = () => {
       id: 1, 
       name: "工位 A1", 
       status: "running", 
-      deviceCount: 12,
+      onlineDevices: [
+        { ip: "192.168.1.101", name: "温度传感器 A1" },
+        { ip: "192.168.1.102", name: "电压监测器 B2" }
+      ],
+      logs: [
+        { timestamp: 0, content: "工位启动成功" },
+        { timestamp: 15, content: "设备连接正常" },
+        { timestamp: 30, content: "开始执行高温老化流程 A" },
+        { timestamp: 45, content: "温度达到设定值 65°C" },
+        { timestamp: 60, content: "电压稳定在 220V" }
+      ],
       temperature: 65.5,
       voltage: 220,
       uptime: "2h 15m",
@@ -55,7 +72,18 @@ const WorkstationOverview = () => {
       id: 2, 
       name: "工位 B2", 
       status: "passed", 
-      deviceCount: 8,
+      onlineDevices: [
+        { ip: "192.168.1.103", name: "温度传感器 C3" },
+        { ip: "192.168.1.104", name: "电压监测器 D4" },
+        { ip: "192.168.1.105", name: "湿度传感器 E5" }
+      ],
+      logs: [
+        { timestamp: 0, content: "工位启动成功" },
+        { timestamp: 20, content: "所有设备在线" },
+        { timestamp: 40, content: "开始执行标准老化流程 B" },
+        { timestamp: 120, content: "老化测试完成，结果通过" },
+        { timestamp: 180, content: "工位停止运行" }
+      ],
       temperature: 70.2,
       voltage: 219,
       uptime: "4h 30m",
@@ -70,7 +98,14 @@ const WorkstationOverview = () => {
       id: 3, 
       name: "工位 C3", 
       status: "failed", 
-      deviceCount: 5,
+      onlineDevices: [],
+      logs: [
+        { timestamp: 0, content: "工位启动成功" },
+        { timestamp: 10, content: "检测到设备离线" },
+        { timestamp: 25, content: "无法启动快速老化流程 C" },
+        { timestamp: 30, content: "老化测试失败 - 设备连接异常" },
+        { timestamp: 35, content: "工位进入失败状态" }
+      ],
       temperature: 58.1,
       voltage: 210,
       uptime: "1h 20m",
@@ -85,7 +120,15 @@ const WorkstationOverview = () => {
       id: 4, 
       name: "工位 D4", 
       status: "stopped", 
-      deviceCount: 15,
+      onlineDevices: [
+        { ip: "192.168.1.106", name: "温度传感器 F6" }
+      ],
+      logs: [
+        { timestamp: 0, content: "工位初始化完成" },
+        { timestamp: 5, content: "部分设备离线" },
+        { timestamp: 10, content: "等待设备连接" },
+        { timestamp: 15, content: "工位处于待机状态" }
+      ],
       temperature: 25.0,
       voltage: 220,
       uptime: "0h 0m",
@@ -100,7 +143,17 @@ const WorkstationOverview = () => {
       id: 5, 
       name: "工位 E5", 
       status: "running", 
-      deviceCount: 10,
+      onlineDevices: [
+        { ip: "192.168.1.107", name: "温度传感器 G7" },
+        { ip: "192.168.1.108", name: "功率计 H8" }
+      ],
+      logs: [
+        { timestamp: 0, content: "工位启动成功" },
+        { timestamp: 12, content: "设备连接正常" },
+        { timestamp: 28, content: "开始执行高温老化流程 A" },
+        { timestamp: 42, content: "温度上升中，当前 62°C" },
+        { timestamp: 55, content: "功率输出正常，485W" }
+      ],
       temperature: 68.3,
       voltage: 221,
       uptime: "3h 10m",
@@ -115,7 +168,16 @@ const WorkstationOverview = () => {
       id: 6, 
       name: "工位 F6", 
       status: "stopped", 
-      deviceCount: 7,
+      onlineDevices: [
+        { ip: "192.168.1.109", name: "温度传感器 I9" }
+      ],
+      logs: [
+        { timestamp: 0, content: "工位初始化完成" },
+        { timestamp: 18, content: "设备连接正常" },
+        { timestamp: 35, content: "开始执行低温老化流程 D" },
+        { timestamp: 50, content: "检测到异常，暂停老化流程" },
+        { timestamp: 55, content: "等待用户确认继续操作" }
+      ],
       temperature: 26.5,
       voltage: 219,
       uptime: "0h 0m",
@@ -185,7 +247,8 @@ const WorkstationOverview = () => {
             id={workstation.id}
             name={workstation.name}
             status={workstation.status}
-            deviceCount={workstation.deviceCount}
+            onlineDevices={workstation.onlineDevices}
+            logs={workstation.logs}
             onDetailsClick={() => handleViewDetails(workstation)}
             onActionClick={() => {
               const action = window.prompt('选择操作: start, stop, edit, delete');

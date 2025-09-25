@@ -2,93 +2,119 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  Play, 
-  StopCircle, 
-  CheckCircle, 
+  Play,
+  CheckCircle,
   XCircle,
-  Monitor
+  PauseCircle,
+  StopCircle
 } from "lucide-react";
 
 interface WorkstationCardProps {
   id: number;
   name: string;
-  status: 'running' | 'passed' | 'failed' | 'stopped';
-  deviceCount: number;
+  status: 'running' | 'passed' | 'failed' | 'stopped' | 'paused';
+  onlineDevices: Array<{
+    ip: string;
+    name: string;
+  }>;
+  currentAgingProcess?: string;
+  logs: Array<{
+    timestamp: number;
+    content: string;
+  }>;
   onDetailsClick: () => void;
   onActionClick: () => void;
 }
 
-const WorkstationCard = ({
-  name,
-  status,
-  deviceCount,
-  onDetailsClick,
-  onActionClick
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'running': return <Play className="h-4 w-4 text-blue-500" />;
+    case 'passed': return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case 'failed': return <XCircle className="h-4 w-4 text-red-500" />;
+    case 'stopped': return <StopCircle className="h-4 w-4 text-gray-500" />;
+    case 'paused': return <PauseCircle className="h-4 w-4 text-yellow-500" />;
+    default: return <PauseCircle className="h-4 w-4 text-gray-500" />;
+  }
+};
+
+const WorkstationCard = ({ 
+  id, 
+  name, 
+  status, 
+  onlineDevices,
+  currentAgingProcess,
+  logs,
+  onDetailsClick, 
+  onActionClick 
 }: WorkstationCardProps) => {
-  const getStatusColor = () => {
-    switch (status) {
-      case 'running': return 'bg-blue-500';
-      case 'passed': return 'bg-green-500';
-      case 'failed': return 'bg-red-500';
-      case 'stopped': return 'bg-gray-500';
-      default: return 'bg-gray-300';
-    }
-  };
-
-  const getStatusText = () => {
-    switch (status) {
-      case 'running': return '运行中';
-      case 'passed': return '老化通过';
-      case 'failed': return '老化失败';
-      case 'stopped': return '已停止';
-      default: return '未知';
-    }
-  };
-
-  const getActionButtonText = () => {
-    switch (status) {
-      case 'running': return '停止';
-      case 'stopped': return '启动';
-      default: return '重新开始';
-    }
-  };
-
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{name}</CardTitle>
-          <div className="flex items-center space-x-2">
-            <div className={`w-3 h-3 rounded-full ${getStatusColor()}`}></div>
-            <Badge variant={status === 'running' ? 'default' : 'secondary'}>
-              {getStatusText()}
-            </Badge>
-          </div>
+          {getStatusIcon(status)}
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Monitor className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{deviceCount} 设备</span>
+      <CardContent className="space-y-4">
+        {/* 老化配置信息 */}
+        {currentAgingProcess && (
+          <div className="flex items-center space-x-2 text-sm">
+            <span className="text-muted-foreground">老化配置:</span>
+            <span className="font-medium text-blue-600">{currentAgingProcess}</span>
+          </div>
+        )}
+        
+        {/* 在线设备信息 */}
+        <div className="space-y-1">
+          <div className="text-sm text-muted-foreground">在线设备 ({onlineDevices.length}):</div>
+          {onlineDevices.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {onlineDevices.map((device, index) => (
+                <span 
+                  key={index} 
+                  className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                  title={device.name}
+                >
+                  {device.ip}
+                </span>
+              ))}
             </div>
-            <Button variant="outline" size="sm" onClick={onDetailsClick}>
-              详情
-            </Button>
-          </div>
-          <div className="flex space-x-2">
-            <Button 
-              className="flex-1"
-              size="sm"
-              onClick={onActionClick}
+          ) : (
+            <span className="text-sm text-gray-500">无在线设备</span>
+          )}
+        </div>
+
+        {/* 日志显示 */}
+        <div className="space-y-1">
+          <div className="text-sm text-muted-foreground">最新日志:</div>
+          {logs.length > 0 && (
+            <div 
+              className="text-xs bg-muted/30 p-2 rounded text-muted-foreground max-h-20 overflow-y-auto"
+              title={logs.map(log => `${log.timestamp}s: ${log.content}`).join('\n')}
             >
-              {getActionButtonText()}
-            </Button>
-          </div>
+              {logs[logs.length - 1].timestamp}s: {logs[logs.length - 1].content}
+            </div>
+          )}
+        </div>
+
+        {/* 操作按钮 */}
+        <div className="flex space-x-2 pt-2">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={onDetailsClick}
+            className="flex-1"
+          >
+            详情
+          </Button>
+          <Button 
+            size="sm" 
+            onClick={onActionClick}
+          >
+            操作
+          </Button>
         </div>
       </CardContent>
     </Card>
