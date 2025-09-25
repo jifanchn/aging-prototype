@@ -24,7 +24,7 @@ interface RegisterMapping {
   isImportant: boolean;
   scale: number;
   offset: number;
-  deviceName: string;
+  // 移除了 deviceName 字段
 }
 
 interface DeviceRegisterTable {
@@ -59,8 +59,7 @@ const DeviceRegisterTable = () => {
           normalRangeMax: 100,
           isImportant: true,
           scale: 0.1,
-          offset: 0,
-          deviceName: '温度传感器 A1'
+          offset: 0
         },
         {
           id: '2',
@@ -73,8 +72,7 @@ const DeviceRegisterTable = () => {
           normalRangeMax: 100,
           isImportant: false,
           scale: 0.1,
-          offset: 0,
-          deviceName: '湿度传感器 C3'
+          offset: 0
         }
       ]
     },
@@ -95,8 +93,7 @@ const DeviceRegisterTable = () => {
           normalRangeMax: 230,
           isImportant: true,
           scale: 0.1,
-          offset: 0,
-          deviceName: '电压监测器 B2'
+          offset: 0
         },
         {
           id: '4',
@@ -109,8 +106,7 @@ const DeviceRegisterTable = () => {
           normalRangeMax: 10,
           isImportant: true,
           scale: 0.01,
-          offset: 0,
-          deviceName: '电流传感器 D4'
+          offset: 0
         }
       ]
     }
@@ -121,7 +117,7 @@ const DeviceRegisterTable = () => {
     { id: 'type2', name: '电力监测器' }
   ]);
 
-  const [activeTableId, setActiveTableId] = useState('table1');
+  const [activeDeviceTypeId, setActiveDeviceTypeId] = useState('type1');
   const [newMapping, setNewMapping] = useState<Omit<RegisterMapping, 'id'>>({
     name: '',
     address: 40001,
@@ -132,15 +128,14 @@ const DeviceRegisterTable = () => {
     normalRangeMax: 100,
     isImportant: false,
     scale: 1.0,
-    offset: 0,
-    deviceName: ''
+    offset: 0
   });
 
-  const activeTable = tables.find(table => table.id === activeTableId);
+  const activeTable = tables.find(table => table.deviceTypeId === activeDeviceTypeId);
 
   const handleAddMapping = () => {
-    if (!newMapping.name || !newMapping.deviceName) {
-      showError('请输入寄存器名称和设备名称');
+    if (!newMapping.name) {
+      showError('请输入寄存器名称');
       return;
     }
 
@@ -150,7 +145,7 @@ const DeviceRegisterTable = () => {
     };
 
     setTables(tables.map(table => 
-      table.id === activeTableId 
+      table.deviceTypeId === activeDeviceTypeId 
         ? { ...table, mappings: [...table.mappings, mapping] }
         : table
     ));
@@ -165,8 +160,7 @@ const DeviceRegisterTable = () => {
       normalRangeMax: 100,
       isImportant: false,
       scale: 1.0,
-      offset: 0,
-      deviceName: ''
+      offset: 0
     });
 
     showSuccess('寄存器映射添加成功');
@@ -174,7 +168,7 @@ const DeviceRegisterTable = () => {
 
   const handleDeleteMapping = (mappingId: string) => {
     setTables(tables.map(table => 
-      table.id === activeTableId 
+      table.deviceTypeId === activeDeviceTypeId 
         ? { ...table, mappings: table.mappings.filter(m => m.id !== mappingId) }
         : table
     ));
@@ -182,7 +176,7 @@ const DeviceRegisterTable = () => {
   };
 
   const handleExportTable = () => {
-    const table = tables.find(t => t.id === activeTableId);
+    const table = tables.find(t => t.deviceTypeId === activeDeviceTypeId);
     if (table) {
       const dataStr = JSON.stringify(table, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
@@ -240,15 +234,15 @@ const DeviceRegisterTable = () => {
         </CardHeader>
         <CardContent>
           <div className="mb-4">
-            <Label htmlFor="tableSelect">选择寄存器表</Label>
-            <Select value={activeTableId} onValueChange={setActiveTableId}>
+            <Label htmlFor="deviceTypeSelect">选择设备类型</Label>
+            <Select value={activeDeviceTypeId} onValueChange={setActiveDeviceTypeId}>
               <SelectTrigger>
-                <SelectValue placeholder="选择寄存器表" />
+                <SelectValue placeholder="选择设备类型" />
               </SelectTrigger>
               <SelectContent>
-                {tables.map(table => (
-                  <SelectItem key={table.id} value={table.id}>
-                    {table.name}
+                {deviceTypes.map(type => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -352,7 +346,7 @@ const DeviceRegisterTable = () => {
               </div>
 
               {/* 新增的变换参数配置 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-1">
                     <Label htmlFor="scale">比例系数 (A)</Label>
@@ -395,15 +389,6 @@ const DeviceRegisterTable = () => {
                     onChange={(e) => setNewMapping({ ...newMapping, offset: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="deviceName">设备名称 *</Label>
-                  <Input
-                    id="deviceName"
-                    placeholder="温度传感器 A1"
-                    value={newMapping.deviceName}
-                    onChange={(e) => setNewMapping({ ...newMapping, deviceName: e.target.value })}
-                  />
-                </div>
               </div>
 
               <Button onClick={handleAddMapping} className="w-full">
@@ -425,7 +410,6 @@ const DeviceRegisterTable = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>名称</TableHead>
-                  <TableHead>设备</TableHead>
                   <TableHead>地址</TableHead>
                   <TableHead>数据类型</TableHead>
                   <TableHead>单位</TableHead>
@@ -438,7 +422,6 @@ const DeviceRegisterTable = () => {
                 {activeTable.mappings.map((mapping) => (
                   <TableRow key={mapping.id}>
                     <TableCell className="font-medium">{mapping.name}</TableCell>
-                    <TableCell>{mapping.deviceName}</TableCell>
                     <TableCell>{mapping.address}</TableCell>
                     <TableCell>{mapping.dataType.toUpperCase()}</TableCell>
                     <TableCell>{mapping.unit}</TableCell>

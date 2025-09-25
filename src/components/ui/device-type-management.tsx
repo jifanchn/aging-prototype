@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 interface DeviceType {
   id: string;
   name: string;
-  protocol: 'modbus-tcp' | 'modbus-rtu' | 'can';
+  protocol: 'modbus-tcp'; // 只保留Modbus TCP
   description: string;
   createdAt: string;
 }
@@ -38,7 +38,7 @@ const DeviceTypeManagement = () => {
 
   const [newDeviceType, setNewDeviceType] = useState<Omit<DeviceType, 'id' | 'createdAt'>>({
     name: '',
-    protocol: 'modbus-tcp',
+    protocol: 'modbus-tcp', // 默认且唯一选项
     description: ''
   });
 
@@ -94,16 +94,12 @@ const DeviceTypeManagement = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="protocol">通信协议</Label>
-              <select
+              <Input
                 id="protocol"
-                className="px-3 py-2 border rounded-md bg-background w-full"
-                value={newDeviceType.protocol}
-                onChange={(e) => setNewDeviceType({ ...newDeviceType, protocol: e.target.value as any })}
-              >
-                <option value="modbus-tcp">Modbus TCP</option>
-                <option value="modbus-rtu">Modbus RTU</option>
-                <option value="can">CAN</option>
-              </select>
+                value="Modbus TCP"
+                readOnly
+                className="bg-muted cursor-not-allowed"
+              />
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="description">描述</Label>
