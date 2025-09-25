@@ -11,17 +11,23 @@ import {
   Settings,
   FileText,
   Download,
-  Upload
+  Upload,
+  Package,
+  Scan,
+  Eye,
+  Zap
 } from "lucide-react";
-import DeviceConnectionConfig from "@/components/ui/device-connection-config";
-import RegisterMappingEditor from "@/components/ui/register-mapping-editor";
+import DeviceTypeManagement from "@/components/ui/device-type-management";
+import RegisterScanConfig from "@/components/ui/register-scan-config";
+import DeviceRegisterTable from "@/components/ui/device-register-table";
+import DeviceProbeConfig from "@/components/ui/device-probe-config";
 import WorkstationDeviceMapping from "@/components/ui/workstation-device-mapping";
 import AgingProcessConfiguration from "@/components/ui/aging-process-configuration";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ProtocolManagement = () => {
-  const [activeTab, setActiveTab] = useState('devices');
+  const [activeTab, setActiveTab] = useState('device-types');
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,31 +51,47 @@ const ProtocolManagement = () => {
       
       <div className="container mx-auto py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid grid-cols-4">
-            <TabsTrigger value="devices">
-              <Wifi className="h-4 w-4 mr-2" />
-              设备连接
+          <TabsList className="grid grid-cols-6">
+            <TabsTrigger value="device-types">
+              <Package className="h-4 w-4 mr-2" />
+              设备类型
             </TabsTrigger>
-            <TabsTrigger value="mapping">
+            <TabsTrigger value="scan-config">
+              <Scan className="h-4 w-4 mr-2" />
+              寄存器扫描
+            </TabsTrigger>
+            <TabsTrigger value="register-table">
               <Database className="h-4 w-4 mr-2" />
-              寄存器映射
+              寄存器表
+            </TabsTrigger>
+            <TabsTrigger value="probe-config">
+              <Eye className="h-4 w-4 mr-2" />
+              Probe条件
             </TabsTrigger>
             <TabsTrigger value="workstation">
               <Cpu className="h-4 w-4 mr-2" />
               工位映射
             </TabsTrigger>
             <TabsTrigger value="aging">
-              <Settings className="h-4 w-4 mr-2" />
+              <Zap className="h-4 w-4 mr-2" />
               老化配置
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="devices" className="mt-6">
-            <DeviceConnectionConfig />
+          <TabsContent value="device-types" className="mt-6">
+            <DeviceTypeManagement />
           </TabsContent>
           
-          <TabsContent value="mapping" className="mt-6">
-            <RegisterMappingEditor />
+          <TabsContent value="scan-config" className="mt-6">
+            <RegisterScanConfig />
+          </TabsContent>
+          
+          <TabsContent value="register-table" className="mt-6">
+            <DeviceRegisterTable />
+          </TabsContent>
+          
+          <TabsContent value="probe-config" className="mt-6">
+            <DeviceProbeConfig />
           </TabsContent>
           
           <TabsContent value="workstation" className="mt-6">
