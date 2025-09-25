@@ -234,10 +234,10 @@ const DeviceRegisterTable = () => {
         </CardHeader>
         <CardContent>
           <div className="mb-4">
-            <Label htmlFor="deviceTypeSelect">选择设备类型</Label>
+            <Label htmlFor="deviceTypeSelect">设备类型</Label>
             <Select value={activeDeviceTypeId} onValueChange={setActiveDeviceTypeId}>
               <SelectTrigger>
-                <SelectValue placeholder="选择设备类型" />
+                <SelectValue placeholder="设备类型" />
               </SelectTrigger>
               <SelectContent>
                 {deviceTypes.map(type => (
