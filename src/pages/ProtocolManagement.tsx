@@ -7,9 +7,11 @@ import {
   Wifi, 
   Plus,
   Database,
-  FileText,
   Cpu,
-  Settings
+  Settings,
+  FileText,
+  Download,
+  Upload
 } from "lucide-react";
 import DeviceConnectionConfig from "@/components/ui/device-connection-config";
 import RegisterMappingEditor from "@/components/ui/register-mapping-editor";
@@ -43,7 +45,7 @@ const ProtocolManagement = () => {
       
       <div className="container mx-auto py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList>
+          <TabsList className="grid grid-cols-4">
             <TabsTrigger value="devices">
               <Wifi className="h-4 w-4 mr-2" />
               设备连接
@@ -62,19 +64,19 @@ const ProtocolManagement = () => {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="devices">
+          <TabsContent value="devices" className="mt-6">
             <DeviceConnectionConfig />
           </TabsContent>
           
-          <TabsContent value="mapping">
+          <TabsContent value="mapping" className="mt-6">
             <RegisterMappingEditor />
           </TabsContent>
           
-          <TabsContent value="workstation">
+          <TabsContent value="workstation" className="mt-6">
             <WorkstationDeviceMapping />
           </TabsContent>
           
-          <TabsContent value="aging">
+          <TabsContent value="aging" className="mt-6">
             <AgingProcessConfiguration />
           </TabsContent>
         </Tabs>

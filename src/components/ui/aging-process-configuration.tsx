@@ -3,258 +3,247 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Plus, 
-  Trash2,
-  Play,
-  Settings
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, Trash2, Save, Settings } from "lucide-react";
+import { showSuccess, showError } from "@/utils/toast";
 
 interface AgingProcess {
   id: string;
   name: string;
   description: string;
-  duration: number; // minutes
-  temperatureTarget: number;
-  voltageTarget: number;
-  status: 'active' | 'inactive';
+  duration: number; // 小时
+  temperature: number;
+  voltage: number;
+  devices: string[]; // 设备ID数组
+  createdAt: string;
 }
 
-interface WorkstationAgingMapping {
-  workstationId: string;
-  processId: string;
-  deviceRequirements: string[]; // required device types
-  priority: 'high' | 'medium' | 'low';
+interface Device {
+  id: string;
+  name: string;
+  protocol: string;
+  ip: string;
+  status: string;
+  registerTableId: string;
 }
 
 const AgingProcessConfiguration = () => {
-  const [processes] = useState<AgingProcess[]>([
-    { 
-      id: 'proc1', 
-      name: '高温老化流程 A', 
+  const [processes, setProcesses] = useState<AgingProcess[]>([
+    {
+      id: 'proc1',
+      name: '高温老化流程 A',
       description: '适用于高温环境下的设备老化测试',
-      duration: 240,
-      temperatureTarget: 70,
-      voltageTarget: 220,
-      status: 'active'
+      duration: 4,
+      temperature: 65,
+      voltage: 220,
+      devices: ['dev1', 'dev2'],
+      createdAt: '2025-08-10'
     },
-    { 
-      id: 'proc2', 
-      name: '标准老化流程 B', 
-      description: '通用老化测试流程',
-      duration: 180,
-      temperatureTarget: 65,
-      voltageTarget: 220,
-      status: 'active'
-    },
-    { 
-      id: 'proc3', 
-      name: '快速老化流程 C', 
-      description: '快速验证流程',
-      duration: 60,
-      temperatureTarget: 60,
-      voltageTarget: 220,
-      status: 'inactive'
-    },
+    {
+      id: 'proc2',
+      name: '标准老化流程 B',
+      description: '标准条件下的设备老化测试',
+      duration: 8,
+      temperature: 55,
+      voltage: 220,
+      devices: ['dev3', 'dev4'],
+      createdAt: '2025-08-11'
+    }
   ]);
 
-  const [workstations] = useState([
-    { id: 'ws1', name: '工位 A1', location: '车间1' },
-    { id: 'ws2', name: '工位 B2', location: '车间1' },
-    { id: 'ws3', name: '工位 C3', location: '车间2' },
+  const [devices] = useState<Device[]>([
+    { id: 'dev1', name: '温度传感器 A1', protocol: 'modbus-tcp', ip: '192.168.1.101', status: 'connected', registerTableId: 'table1' },
+    { id: 'dev2', name: '电压监测器 B2', protocol: 'modbus-tcp', ip: '192.168.1.102', status: 'disconnected', registerTableId: 'table2' },
+    { id: 'dev3', name: '湿度传感器 C3', protocol: 'modbus-tcp', ip: '192.168.1.103', status: 'connected', registerTableId: 'table1' },
+    { id: 'dev4', name: '功率计 D4', protocol: 'modbus-tcp', ip: '192.168.1.104', status: 'connected', registerTableId: 'table2' }
   ]);
 
-  const [mappings, setMappings] = useState<WorkstationAgingMapping[]>([
-    { workstationId: 'ws1', processId: 'proc1', deviceRequirements: ['temperature', 'voltage'], priority: 'high' },
-    { workstationId: 'ws1', processId: 'proc2', deviceRequirements: ['temperature', 'voltage'], priority: 'medium' },
-    { workstationId: 'ws2', processId: 'proc2', deviceRequirements: ['temperature', 'humidity'], priority: 'high' },
-  ]);
-
-  const [newMapping, setNewMapping] = useState<Omit<WorkstationAgingMapping, 'workstationId'>>({
-    processId: '',
-    deviceRequirements: ['temperature'],
-    priority: 'medium'
+  const [newProcess, setNewProcess] = useState<Omit<AgingProcess, 'id' | 'createdAt' | 'devices'>>({
+    name: '',
+    description: '',
+    duration: 4,
+    temperature: 65,
+    voltage: 220
   });
 
-  const [selectedWorkstation, setSelectedWorkstation] = useState<string>('ws1');
+  const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
 
-  const addMapping = () => {
-    if (newMapping.processId) {
-      setMappings([
-        ...mappings,
-        { ...newMapping, workstationId: selectedWorkstation }
-      ]);
-      setNewMapping({
-        processId: '',
-        deviceRequirements: ['temperature'],
-        priority: 'medium'
-      });
+  const handleAddProcess = () => {
+    if (!newProcess.name || selectedDevices.length === 0) {
+      showError('请输入流程名称并选择至少一个设备');
+      return;
     }
+
+    const process: AgingProcess = {
+      id: `process-${Date.now()}`,
+      ...newProcess,
+      devices: selectedDevices,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+
+    setProcesses([...processes, process]);
+    setNewProcess({
+      name: '',
+      description: '',
+      duration: 4,
+      temperature: 65,
+      voltage: 220
+    });
+    setSelectedDevices([]);
+    showSuccess('老化流程添加成功');
   };
 
-  const removeMapping = (processId: string) => {
-    setMappings(mappings.filter(mapping => 
-      !(mapping.workstationId === selectedWorkstation && mapping.processId === processId)
-    ));
+  const handleDeleteProcess = (id: string) => {
+    setProcesses(processes.filter(process => process.id !== id));
+    showSuccess('老化流程删除成功');
   };
 
-  const getProcessName = (id: string) => {
-    return processes.find(proc => proc.id === id)?.name || id;
+  const toggleDeviceSelection = (deviceId: string) => {
+    setSelectedDevices(prev => 
+      prev.includes(deviceId) 
+        ? prev.filter(id => id !== deviceId)
+        : [...prev, deviceId]
+    );
   };
 
-  const getProcessStatus = (id: string) => {
-    return processes.find(proc => proc.id === id)?.status || 'inactive';
-  };
-
-  const filteredMappings = mappings.filter(mapping => mapping.workstationId === selectedWorkstation);
-  const availableProcesses = processes.filter(proc => 
-    !filteredMappings.some(mapping => mapping.processId === proc.id) && proc.status === 'active'
-  );
-
-  const getDeviceRequirementsText = (requirements: string[]) => {
-    return requirements.join(', ');
+  const getDeviceNames = (deviceIds: string[]) => {
+    return deviceIds
+      .map(id => devices.find(d => d.id === id)?.name || '未知设备')
+      .join(', ');
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Settings className="h-5 w-5" />
-          <span>老化流程配置</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-6">
-          <div className="flex items-center space-x-4 mb-4">
-            <Label htmlFor="workstationSelect">选择工位:</Label>
-            <Select value={selectedWorkstation} onValueChange={setSelectedWorkstation}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {workstations.map(ws => (
-                  <SelectItem key={ws.id} value={ws.id}>
-                    {ws.name} ({ws.location})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>新建老化流程</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="processName">流程名称 *</Label>
+              <Input
+                id="processName"
+                placeholder="高温老化流程"
+                value={newProcess.name}
+                onChange={(e) => setNewProcess({ ...newProcess, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="duration">持续时间 (小时)</Label>
+              <Input
+                id="duration"
+                type="number"
+                value={newProcess.duration}
+                onChange={(e) => setNewProcess({ ...newProcess, duration: parseInt(e.target.value) || 4 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="temperature">温度 (°C)</Label>
+              <Input
+                id="temperature"
+                type="number"
+                value={newProcess.temperature}
+                onChange={(e) => setNewProcess({ ...newProcess, temperature: parseInt(e.target.value) || 65 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="voltage">电压 (V)</Label>
+              <Input
+                id="voltage"
+                type="number"
+                value={newProcess.voltage}
+                onChange={(e) => setNewProcess({ ...newProcess, voltage: parseInt(e.target.value) || 220 })}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="description">描述</Label>
+              <Input
+                id="description"
+                placeholder="流程描述"
+                value={newProcess.description}
+                onChange={(e) => setNewProcess({ ...newProcess, description: e.target.value })}
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="space-y-2">
-              <Label htmlFor="processSelect">老化流程</Label>
-              <Select 
-                value={newMapping.processId} 
-                onValueChange={(value) => setNewMapping({...newMapping, processId: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="选择流程" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableProcesses.map(process => (
-                    <SelectItem key={process.id} value={process.id}>
-                      {process.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="priority">优先级</Label>
-              <Select 
-                value={newMapping.priority} 
-                onValueChange={(value) => setNewMapping({...newMapping, priority: value as any})}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="high">高</SelectItem>
-                  <SelectItem value="medium">中</SelectItem>
-                  <SelectItem value="low">低</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex items-end">
-              <Button onClick={addMapping} className="w-full" disabled={!newMapping.processId}>
-                <Plus className="h-4 w-4 mr-2" />
-                添加流程
-              </Button>
+          <div className="space-y-2">
+            <Label>选择设备 *</Label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {devices.map(device => (
+                <div key={device.id} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={`device-${device.id}`}
+                    checked={selectedDevices.includes(device.id)}
+                    onChange={() => toggleDeviceSelection(device.id)}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor={`device-${device.id}`} className="text-sm">
+                    {device.name}
+                  </Label>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <h3 className="font-medium">可用老化流程 ({filteredMappings.length} 个)</h3>
+          <Button onClick={handleAddProcess} className="w-full">
+            <Plus className="mr-2 h-4 w-4" />
+            添加老化流程
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>老化流程列表</CardTitle>
+        </CardHeader>
+        <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>流程名称</TableHead>
-                <TableHead>设备要求</TableHead>
-                <TableHead>优先级</TableHead>
-                <TableHead>状态</TableHead>
+                <TableHead>持续时间</TableHead>
+                <TableHead>温度/电压</TableHead>
+                <TableHead>关联设备</TableHead>
+                <TableHead>创建日期</TableHead>
                 <TableHead>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredMappings.map((mapping) => (
-                <TableRow key={mapping.processId}>
-                  <TableCell>{getProcessName(mapping.processId)}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {getDeviceRequirementsText(mapping.deviceRequirements)}
-                    </Badge>
+              {processes.map((process) => (
+                <TableRow key={process.id}>
+                  <TableCell className="font-medium">
+                    <div>{process.name}</div>
+                    <div className="text-xs text-muted-foreground">{process.description}</div>
                   </TableCell>
+                  <TableCell>{process.duration} 小时</TableCell>
+                  <TableCell>{process.temperature}°C / {process.voltage}V</TableCell>
                   <TableCell>
-                    <Badge variant={mapping.priority === 'high' ? 'default' : mapping.priority === 'medium' ? 'secondary' : 'outline'}>
-                      {mapping.priority === 'high' ? '高' : mapping.priority === 'medium' ? '中' : '低'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getProcessStatus(mapping.processId) === 'active' ? 'default' : 'destructive'}>
-                      {getProcessStatus(mapping.processId) === 'active' ? '可用' : '不可用'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-1">
-                      <Button variant="ghost" size="sm">
-                        <Play className="h-4 w-4 text-green-500" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => removeMapping(mapping.processId)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="text-xs max-w-xs truncate" title={getDeviceNames(process.devices)}>
+                      {getDeviceNames(process.devices)}
                     </div>
+                  </TableCell>
+                  <TableCell>{process.createdAt}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteProcess(process.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </div>
-
-        <div className="mt-4 p-4 bg-muted rounded-lg">
-          <h4 className="font-medium mb-2">配置说明</h4>
-          <ul className="text-sm space-y-1">
-            <li>• 老化流程只能在满足设备要求的工位上启动</li>
-            <li>• 设备要求基于工位-设备映射中的设备类型</li>
-            <li>• 只有状态为"可用"的流程才能被启动</li>
-            <li>• 优先级用于自动流程选择和冲突解决</li>
-          </ul>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

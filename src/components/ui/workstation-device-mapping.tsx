@@ -3,255 +3,209 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Plus, 
-  Trash2,
-  Link,
-  Unlink
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, Trash2, Save } from "lucide-react";
+import { showSuccess, showError } from "@/utils/toast";
 
 interface Workstation {
   id: string;
   name: string;
-  location: string;
-  status: 'active' | 'inactive';
+  description: string;
 }
 
 interface Device {
   id: string;
   name: string;
-  protocol: 'modbus' | 'can';
-  status: 'connected' | 'disconnected';
+  protocol: string;
+  ip: string;
+  status: string;
+  registerTableId: string;
 }
 
 interface WorkstationDeviceMapping {
+  id: string;
   workstationId: string;
   deviceId: string;
-  deviceType: 'temperature' | 'voltage' | 'current' | 'pressure' | 'humidity' | 'custom';
-  role: 'primary' | 'secondary' | 'monitoring';
+  createdAt: string;
 }
 
 const WorkstationDeviceMapping = () => {
   const [workstations] = useState<Workstation[]>([
-    { id: 'ws1', name: '工位 A1', location: '车间1', status: 'active' },
-    { id: 'ws2', name: '工位 B2', location: '车间1', status: 'active' },
-    { id: 'ws3', name: '工位 C3', location: '车间2', status: 'inactive' },
+    { id: 'ws1', name: '工位 A1', description: '主老化工位' },
+    { id: 'ws2', name: '工位 B2', description: '备用老化工位' },
+    { id: 'ws3', name: '工位 C3', description: '测试工位' },
+    { id: 'ws4', name: '工位 D4', description: '验证工位' }
   ]);
 
   const [devices] = useState<Device[]>([
-    { id: 'dev1', name: '温度传感器 A1', protocol: 'modbus', status: 'connected' },
-    { id: 'dev2', name: '电压监测器 B2', protocol: 'modbus', status: 'connected' },
-    { id: 'dev3', name: 'CAN 控制器 C3', protocol: 'can', status: 'disconnected' },
-    { id: 'dev4', name: '湿度传感器 D4', protocol: 'modbus', status: 'connected' },
-    { id: 'dev5', name: '压力传感器 E5', protocol: 'modbus', status: 'connected' },
+    { id: 'dev1', name: '温度传感器 A1', protocol: 'modbus-tcp', ip: '192.168.1.101', status: 'connected', registerTableId: 'table1' },
+    { id: 'dev2', name: '电压监测器 B2', protocol: 'modbus-tcp', ip: '192.168.1.102', status: 'disconnected', registerTableId: 'table2' },
+    { id: 'dev3', name: '湿度传感器 C3', protocol: 'modbus-tcp', ip: '192.168.1.103', status: 'connected', registerTableId: 'table1' },
+    { id: 'dev4', name: '功率计 D4', protocol: 'modbus-tcp', ip: '192.168.1.104', status: 'connected', registerTableId: 'table2' }
   ]);
 
   const [mappings, setMappings] = useState<WorkstationDeviceMapping[]>([
-    { workstationId: 'ws1', deviceId: 'dev1', deviceType: 'temperature', role: 'primary' },
-    { workstationId: 'ws1', deviceId: 'dev2', deviceType: 'voltage', role: 'primary' },
-    { workstationId: 'ws2', deviceId: 'dev4', deviceType: 'humidity', role: 'primary' },
-    { workstationId: 'ws2', deviceId: 'dev5', deviceType: 'pressure', role: 'primary' },
+    { id: 'map1', workstationId: 'ws1', deviceId: 'dev1', createdAt: '2025-08-10' },
+    { id: 'map2', workstationId: 'ws1', deviceId: 'dev2', createdAt: '2025-08-10' },
+    { id: 'map3', workstationId: 'ws2', deviceId: 'dev3', createdAt: '2025-08-11' },
+    { id: 'map4', workstationId: 'ws3', deviceId: 'dev4', createdAt: '2025-08-12' }
   ]);
 
-  const [newMapping, setNewMapping] = useState<Omit<WorkstationDeviceMapping, 'workstationId'>>({
-    deviceId: '',
-    deviceType: 'temperature',
-    role: 'primary'
+  const [newMapping, setNewMapping] = useState<Omit<WorkstationDeviceMapping, 'id' | 'createdAt'>>({
+    workstationId: '',
+    deviceId: ''
   });
 
-  const [selectedWorkstation, setSelectedWorkstation] = useState<string>('ws1');
-
-  const addMapping = () => {
-    if (newMapping.deviceId) {
-      setMappings([
-        ...mappings,
-        { ...newMapping, workstationId: selectedWorkstation }
-      ]);
-      setNewMapping({
-        deviceId: '',
-        deviceType: 'temperature',
-        role: 'primary'
-      });
+  const handleAddMapping = () => {
+    if (!newMapping.workstationId || !newMapping.deviceId) {
+      showError('请选择工位和设备');
+      return;
     }
+
+    // 检查是否已存在相同的映射
+    const existingMapping = mappings.find(
+      m => m.workstationId === newMapping.workstationId && m.deviceId === newMapping.deviceId
+    );
+    if (existingMapping) {
+      showError('该设备已映射到此工位');
+      return;
+    }
+
+    const mapping: WorkstationDeviceMapping = {
+      id: `mapping-${Date.now()}`,
+      ...newMapping,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+
+    setMappings([...mappings, mapping]);
+    setNewMapping({ workstationId: '', deviceId: '' });
+    showSuccess('设备映射添加成功');
   };
 
-  const removeMapping = (deviceId: string) => {
-    setMappings(mappings.filter(mapping => 
-      !(mapping.workstationId === selectedWorkstation && mapping.deviceId === deviceId)
-    ));
+  const handleDeleteMapping = (id: string) => {
+    setMappings(mappings.filter(mapping => mapping.id !== id));
+    showSuccess('设备映射删除成功');
   };
 
   const getWorkstationName = (id: string) => {
-    return workstations.find(ws => ws.id === id)?.name || id;
+    return workstations.find(ws => ws.id === id)?.name || '未知工位';
   };
 
   const getDeviceName = (id: string) => {
-    return devices.find(dev => dev.id === id)?.name || id;
+    return devices.find(dev => dev.id === id)?.name || '未知设备';
   };
-
-  const getDeviceStatus = (id: string) => {
-    return devices.find(dev => dev.id === id)?.status || 'disconnected';
-  };
-
-  const filteredMappings = mappings.filter(mapping => mapping.workstationId === selectedWorkstation);
-  const availableDevices = devices.filter(device => 
-    !filteredMappings.some(mapping => mapping.deviceId === device.id)
-  );
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Link className="h-5 w-5" />
-          <span>工位-设备映射</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-6">
-          <div className="flex items-center space-x-4 mb-4">
-            <Label htmlFor="workstationSelect">选择工位:</Label>
-            <Select value={selectedWorkstation} onValueChange={setSelectedWorkstation}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {workstations.map(ws => (
-                  <SelectItem key={ws.id} value={ws.id}>
-                    {ws.name} ({ws.location})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>工位-设备映射</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="deviceSelect">设备</Label>
-              <Select 
-                value={newMapping.deviceId} 
-                onValueChange={(value) => setNewMapping({...newMapping, deviceId: value})}
+              <label htmlFor="workstationSelect" className="text-sm font-medium">选择工位 *</label>
+              <Select
+                value={newMapping.workstationId}
+                onValueChange={(value) => setNewMapping({ ...newMapping, workstationId: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="选择设备" />
+                <SelectTrigger id="workstationSelect">
+                  <SelectValue placeholder="选择工位" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableDevices.map(device => (
-                    <SelectItem key={device.id} value={device.id}>
-                      {device.name}
+                  {workstations.map(workstation => (
+                    <SelectItem key={workstation.id} value={workstation.id}>
+                      {workstation.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            
             <div className="space-y-2">
-              <Label htmlFor="deviceType">设备类型</Label>
-              <Select 
-                value={newMapping.deviceType} 
-                onValueChange={(value) => setNewMapping({...newMapping, deviceType: value as any})}
+              <label htmlFor="deviceSelect" className="text-sm font-medium">选择设备 *</label>
+              <Select
+                value={newMapping.deviceId}
+                onValueChange={(value) => setNewMapping({ ...newMapping, deviceId: value })}
               >
-                <SelectTrigger>
-                  <SelectValue />
+                <SelectTrigger id="deviceSelect">
+                  <SelectValue placeholder="选择设备" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="temperature">温度</SelectItem>
-                  <SelectItem value="voltage">电压</SelectItem>
-                  <SelectItem value="current">电流</SelectItem>
-                  <SelectItem value="pressure">压力</SelectItem>
-                  <SelectItem value="humidity">湿度</SelectItem>
-                  <SelectItem value="custom">自定义</SelectItem>
+                  {devices.map(device => (
+                    <SelectItem key={device.id} value={device.id}>
+                      {device.name} ({device.ip})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="role">角色</Label>
-              <Select 
-                value={newMapping.role} 
-                onValueChange={(value) => setNewMapping({...newMapping, role: value as any})}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="primary">主要</SelectItem>
-                  <SelectItem value="secondary">次要</SelectItem>
-                  <SelectItem value="monitoring">监控</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex items-end">
-              <Button onClick={addMapping} className="w-full" disabled={!newMapping.deviceId}>
-                <Plus className="h-4 w-4 mr-2" />
-                添加映射
-              </Button>
             </div>
           </div>
-        </div>
+          <Button onClick={handleAddMapping} className="w-full">
+            <Plus className="mr-2 h-4 w-4" />
+            添加映射
+          </Button>
+        </CardContent>
+      </Card>
 
-        <div className="space-y-2">
-          <h3 className="font-medium">当前映射 ({filteredMappings.length} 个设备)</h3>
+      <Card>
+        <CardHeader>
+          <CardTitle>映射列表</CardTitle>
+        </CardHeader>
+        <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>设备名称</TableHead>
-                <TableHead>设备类型</TableHead>
-                <TableHead>角色</TableHead>
-                <TableHead>状态</TableHead>
+                <TableHead>工位</TableHead>
+                <TableHead>设备</TableHead>
+                <TableHead>创建日期</TableHead>
                 <TableHead>操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredMappings.map((mapping) => (
-                <TableRow key={mapping.deviceId}>
+              {mappings.map((mapping) => (
+                <TableRow key={mapping.id}>
+                  <TableCell className="font-medium">{getWorkstationName(mapping.workstationId)}</TableCell>
                   <TableCell>{getDeviceName(mapping.deviceId)}</TableCell>
+                  <TableCell>{mapping.createdAt}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">
-                      {mapping.deviceType}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={mapping.role === 'primary' ? 'default' : 'secondary'}>
-                      {mapping.role === 'primary' ? '主要' : mapping.role === 'secondary' ? '次要' : '监控'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getDeviceStatus(mapping.deviceId) === 'connected' ? 'default' : 'destructive'}>
-                      {getDeviceStatus(mapping.deviceId) === 'connected' ? '在线' : '离线'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => removeMapping(mapping.deviceId)}
-                      className="text-red-500 hover:text-red-700"
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteMapping(mapping.id)}
                     >
-                      <Unlink className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </div>
+        </CardContent>
+      </Card>
 
-        <div className="mt-4 p-4 bg-muted rounded-lg">
-          <h4 className="font-medium mb-2">映射说明</h4>
-          <ul className="text-sm space-y-1">
-            <li>• <strong>主要设备</strong>: 参与老化流程控制的关键设备</li>
-            <li>• <strong>次要设备</strong>: 辅助监控，不影响流程执行</li>
-            <li>• <strong>监控设备</strong>: 仅用于数据记录和显示</li>
-            <li>• 只有在线的设备才能启动对应的老化流程</li>
-          </ul>
-        </div>
-      </CardContent>
-    </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>映射统计</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <div className="text-sm text-muted-foreground">总工位数</div>
+              <div className="text-2xl font-bold">{workstations.length}</div>
+            </div>
+            <div className="p-4 bg-muted rounded-lg">
+              <div className="text-sm text-muted-foreground">总设备数</div>
+              <div className="text-2xl font-bold">{devices.length}</div>
+            </div>
+            <div className="p-4 bg-muted rounded-lg">
+              <div className="text-sm text-muted-foreground">映射关系</div>
+              <div className="text-2xl font-bold">{mappings.length}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

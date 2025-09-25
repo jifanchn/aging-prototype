@@ -5,287 +5,282 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Wifi, 
-  TestTube,
-  CheckCircle2,
-  XCircle,
-  RefreshCw,
-  Plus
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, Trash2, Save, Wifi } from "lucide-react";
+import { showSuccess, showError } from "@/utils/toast";
 
-interface DeviceConnection {
+interface DeviceConfig {
   id: string;
   name: string;
-  protocol: 'modbus' | 'can';
-  ipAddress?: string;
-  port?: number;
-  slaveId?: number;
-  canInterface?: string;
-  canBaudRate?: number;
-  canId?: string;
-  status: 'connected' | 'disconnected' | 'connecting' | 'error';
-  lastSeen?: string;
+  protocol: 'modbus-tcp' | 'modbus-rtu' | 'can';
+  ip: string;
+  port: number;
+  slaveId: number;
+  registerTableId: string;
+  status: 'connected' | 'disconnected' | 'error';
+}
+
+interface RegisterTable {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
 }
 
 const DeviceConnectionConfig = () => {
-  const [devices, setDevices] = useState<DeviceConnection[]>([
+  const [devices, setDevices] = useState<DeviceConfig[]>([
     {
       id: '1',
       name: '温度传感器 A1',
-      protocol: 'modbus',
-      ipAddress: '192.168.1.101',
+      protocol: 'modbus-tcp',
+      ip: '192.168.1.101',
       port: 502,
       slaveId: 1,
-      status: 'connected',
-      lastSeen: '2025-08-13 14:30:22'
+      registerTableId: 'table1',
+      status: 'connected'
     },
     {
       id: '2',
       name: '电压监测器 B2',
-      protocol: 'modbus',
-      ipAddress: '192.168.1.102',
+      protocol: 'modbus-tcp',
+      ip: '192.168.1.102',
       port: 502,
       slaveId: 2,
-      status: 'connected',
-      lastSeen: '2025-08-13 14:30:15'
-    },
-    {
-      id: '3',
-      name: 'CAN 控制器 C3',
-      protocol: 'can',
-      canInterface: 'can0',
-      canBaudRate: 500000,
-      canId: '0x123',
-      status: 'disconnected',
-      lastSeen: '2025-08-13 12:15:30'
+      registerTableId: 'table2',
+      status: 'disconnected'
     }
   ]);
 
-  const [newDevice, setNewDevice] = useState<Omit<DeviceConnection, 'id' | 'status' | 'lastSeen'>>({
+  const [registerTables] = useState<RegisterTable[]>([
+    {
+      id: 'table1',
+      name: '温度传感器寄存器表',
+      description: '包含温度、湿度等寄存器定义',
+      createdAt: '2025-08-10'
+    },
+    {
+      id: 'table2',
+      name: '电力监测寄存器表',
+      description: '包含电压、电流、功率等寄存器定义',
+      createdAt: '2025-08-11'
+    },
+    {
+      id: 'table3',
+      name: '通用设备寄存器表',
+      description: '通用寄存器映射配置',
+      createdAt: '2025-08-12'
+    }
+  ]);
+
+  const [newDevice, setNewDevice] = useState<Omit<DeviceConfig, 'id' | 'status'>>({
     name: '',
-    protocol: 'modbus',
-    ipAddress: '192.168.1.100',
+    protocol: 'modbus-tcp',
+    ip: '',
     port: 502,
-    slaveId: 1
+    slaveId: 1,
+    registerTableId: ''
   });
 
-  const testConnection = (deviceId: string) => {
-    setDevices(devices.map(device => 
-      device.id === deviceId ? { ...device, status: 'connecting' } : device
-    ));
+  const handleAddDevice = () => {
+    if (!newDevice.name || !newDevice.ip || !newDevice.registerTableId) {
+      showError('请填写设备名称、IP地址和选择寄存器表');
+      return;
+    }
+
+    const device: DeviceConfig = {
+      id: `device-${Date.now()}`,
+      ...newDevice,
+      status: 'disconnected'
+    };
+
+    setDevices([...devices, device]);
+    setNewDevice({
+      name: '',
+      protocol: 'modbus-tcp',
+      ip: '',
+      port: 502,
+      slaveId: 1,
+      registerTableId: ''
+    });
+    showSuccess('设备添加成功');
+  };
+
+  const handleDeleteDevice = (id: string) => {
+    setDevices(devices.filter(device => device.id !== id));
+    showSuccess('设备删除成功');
+  };
+
+  const handleTestConnection = (id: string) => {
+    // 模拟连接测试 - properly type the status
+    const newStatus: 'connected' | 'error' = Math.random() > 0.5 ? 'connected' : 'error';
+    const updatedDevices = devices.map(device => 
+      device.id === id 
+        ? { ...device, status: newStatus }
+        : device
+    );
+    setDevices(updatedDevices);
     
-    // Simulate connection test
-    setTimeout(() => {
-      setDevices(devices.map(device => 
-        device.id === deviceId ? { ...device, status: 'connected', lastSeen: new Date().toLocaleString() } : device
-      ));
-    }, 1000);
-  };
-
-  const addDevice = () => {
-    if (newDevice.name.trim()) {
-      const device: DeviceConnection = {
-        ...newDevice,
-        id: Date.now().toString(),
-        status: 'disconnected'
-      };
-      setDevices([...devices, device]);
-      setNewDevice({
-        name: '',
-        protocol: 'modbus',
-        ipAddress: '192.168.1.100',
-        port: 502,
-        slaveId: 1
-      });
+    const device = updatedDevices.find(d => d.id === id);
+    if (device?.status === 'connected') {
+      showSuccess(`设备 ${device.name} 连接成功`);
+    } else {
+      showError(`设备 ${device?.name} 连接失败`);
     }
   };
 
-  const getStatusIcon = (status: DeviceConnection['status']) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'connected':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      case 'disconnected':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'connecting':
-        return <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />;
-      case 'error':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusText = (status: DeviceConnection['status']) => {
-    switch (status) {
-      case 'connected': return '已连接';
-      case 'disconnected': return '已断开';
-      case 'connecting': return '连接中...';
-      case 'error': return '连接错误';
-      default: return '未知';
+      case 'connected': return 'text-green-500';
+      case 'disconnected': return 'text-gray-500';
+      case 'error': return 'text-red-500';
+      default: return 'text-gray-500';
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Wifi className="h-5 w-5" />
-          <span>设备连接配置</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-6 p-4 bg-muted rounded-lg">
-          <h3 className="font-medium mb-3">添加新设备</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>添加新设备</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="deviceName">设备名称</Label>
+              <Label htmlFor="deviceName">设备名称 *</Label>
               <Input
                 id="deviceName"
+                placeholder="输入设备名称"
                 value={newDevice.name}
-                onChange={(e) => setNewDevice({...newDevice, name: e.target.value})}
-                placeholder="温度传感器 A1"
+                onChange={(e) => setNewDevice({ ...newDevice, name: e.target.value })}
               />
             </div>
-            
             <div className="space-y-2">
-              <Label htmlFor="protocol">协议类型</Label>
+              <Label htmlFor="protocol">通信协议</Label>
               <Select
                 value={newDevice.protocol}
-                onValueChange={(value) => setNewDevice({...newDevice, protocol: value as any})}
+                onValueChange={(value) => setNewDevice({ ...newDevice, protocol: value as any })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择协议" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="modbus">Modbus TCP</SelectItem>
+                  <SelectItem value="modbus-tcp">Modbus TCP</SelectItem>
+                  <SelectItem value="modbus-rtu">Modbus RTU</SelectItem>
                   <SelectItem value="can">CAN</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            
-            {newDevice.protocol === 'modbus' && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="ipAddress">IP 地址</Label>
-                  <Input
-                    id="ipAddress"
-                    value={newDevice.ipAddress}
-                    onChange={(e) => setNewDevice({...newDevice, ipAddress: e.target.value})}
-                    placeholder="192.168.1.100"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="port">端口</Label>
-                  <Input
-                    id="port"
-                    type="number"
-                    value={newDevice.port}
-                    onChange={(e) => setNewDevice({...newDevice, port: parseInt(e.target.value) || 502})}
-                    placeholder="502"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="slaveId">从站ID</Label>
-                  <Input
-                    id="slaveId"
-                    type="number"
-                    value={newDevice.slaveId}
-                    onChange={(e) => setNewDevice({...newDevice, slaveId: parseInt(e.target.value) || 1})}
-                    placeholder="1"
-                  />
-                </div>
-              </>
-            )}
-            
-            {newDevice.protocol === 'can' && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="canInterface">CAN 接口</Label>
-                  <Input
-                    id="canInterface"
-                    value={newDevice.canInterface}
-                    onChange={(e) => setNewDevice({...newDevice, canInterface: e.target.value})}
-                    placeholder="can0"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="canBaudRate">波特率</Label>
-                  <Select
-                    value={newDevice.canBaudRate?.toString() || '500000'}
-                    onValueChange={(value) => setNewDevice({...newDevice, canBaudRate: parseInt(value)})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="选择波特率" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="125000">125 kbps</SelectItem>
-                      <SelectItem value="250000">250 kbps</SelectItem>
-                      <SelectItem value="500000">500 kbps</SelectItem>
-                      <SelectItem value="1000000">1 Mbps</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="canId">CAN ID</Label>
-                  <Input
-                    id="canId"
-                    value={newDevice.canId}
-                    onChange={(e) => setNewDevice({...newDevice, canId: e.target.value})}
-                    placeholder="0x123"
-                  />
-                </div>
-              </>
-            )}
-            
-            <div className="flex items-end">
-              <Button onClick={addDevice} className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                添加设备
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="ipAddress">IP 地址 *</Label>
+              <Input
+                id="ipAddress"
+                placeholder="192.168.1.100"
+                value={newDevice.ip}
+                onChange={(e) => setNewDevice({ ...newDevice, ip: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="port">端口号</Label>
+              <Input
+                id="port"
+                type="number"
+                value={newDevice.port}
+                onChange={(e) => setNewDevice({ ...newDevice, port: parseInt(e.target.value) || 502 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="slaveId">从站ID</Label>
+              <Input
+                id="slaveId"
+                type="number"
+                value={newDevice.slaveId}
+                onChange={(e) => setNewDevice({ ...newDevice, slaveId: parseInt(e.target.value) || 1 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="registerTable">寄存器表 *</Label>
+              <Select
+                value={newDevice.registerTableId}
+                onValueChange={(value) => setNewDevice({ ...newDevice, registerTableId: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="选择寄存器表" />
+                </SelectTrigger>
+                <SelectContent>
+                  {registerTables.map(table => (
+                    <SelectItem key={table.id} value={table.id}>
+                      {table.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        </div>
+          <Button onClick={handleAddDevice} className="w-full">
+            <Plus className="mr-2 h-4 w-4" />
+            添加设备
+          </Button>
+        </CardContent>
+      </Card>
 
-        <div className="space-y-3">
-          <h3 className="font-medium">已配置设备</h3>
-          {devices.map((device) => (
-            <div key={device.id} className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="flex items-center space-x-4">
-                {getStatusIcon(device.status)}
-                <div>
-                  <div className="font-medium">{device.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {device.protocol === 'modbus' 
-                      ? `${device.ipAddress}:${device.port} (ID: ${device.slaveId})`
-                      : `${device.canInterface} @ ${device.canBaudRate}bps (ID: ${device.canId})`
-                    }
-                  </div>
-                  {device.lastSeen && (
-                    <div className="text-xs text-muted-foreground">最后连接: {device.lastSeen}</div>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge variant={device.status === 'connected' ? 'default' : 'secondary'}>
-                  {getStatusText(device.status)}
-                </Badge>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => testConnection(device.id)}
-                >
-                  <TestTube className="h-4 w-4 mr-1" />
-                  Probe
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>设备列表</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>设备名称</TableHead>
+                <TableHead>协议</TableHead>
+                <TableHead>IP地址</TableHead>
+                <TableHead>寄存器表</TableHead>
+                <TableHead>状态</TableHead>
+                <TableHead>操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {devices.map((device) => (
+                <TableRow key={device.id}>
+                  <TableCell className="font-medium">{device.name}</TableCell>
+                  <TableCell>{device.protocol.toUpperCase()}</TableCell>
+                  <TableCell>{device.ip}:{device.port}</TableCell>
+                  <TableCell>
+                    {registerTables.find(t => t.id === device.registerTableId)?.name || '未配置'}
+                  </TableCell>
+                  <TableCell>
+                    <span className={`flex items-center space-x-1 ${getStatusColor(device.status)}`}>
+                      <Wifi className="h-4 w-4" />
+                      <span>
+                        {device.status === 'connected' ? '已连接' : 
+                         device.status === 'disconnected' ? '未连接' : '连接错误'}
+                      </span>
+                    </span>
+                  </TableCell>
+                  <TableCell className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleTestConnection(device.id)}
+                    >
+                      测试连接
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDeleteDevice(device.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
