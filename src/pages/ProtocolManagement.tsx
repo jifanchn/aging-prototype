@@ -7,22 +7,14 @@ import {
   Wifi, 
   Plus,
   Database,
-  Cpu,
-  Settings,
-  FileText,
-  Download,
-  Upload,
   Package,
   Scan,
-  Eye,
-  Zap
+  Eye
 } from "lucide-react";
 import DeviceTypeManagement from "@/components/ui/device-type-management";
 import RegisterScanConfig from "@/components/ui/register-scan-config";
 import DeviceRegisterTable from "@/components/ui/device-register-table";
 import DeviceProbeConfig from "@/components/ui/device-probe-config";
-import WorkstationDeviceMapping from "@/components/ui/workstation-device-mapping";
-import AgingProcessConfiguration from "@/components/ui/aging-process-configuration";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -36,10 +28,6 @@ const ProtocolManagement = () => {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">协议通信管理</h1>
             <div className="flex items-center space-x-2">
-              <Button variant="outline">
-                <FileText className="mr-2 h-4 w-4" />
-                CSV 导入/导出
-              </Button>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 新建配置
@@ -51,7 +39,7 @@ const ProtocolManagement = () => {
       
       <div className="container mx-auto py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid grid-cols-6">
+          <TabsList className="grid grid-cols-4">
             <TabsTrigger value="device-types">
               <Package className="h-4 w-4 mr-2" />
               设备类型
@@ -67,14 +55,6 @@ const ProtocolManagement = () => {
             <TabsTrigger value="probe-config">
               <Eye className="h-4 w-4 mr-2" />
               Probe条件
-            </TabsTrigger>
-            <TabsTrigger value="workstation">
-              <Cpu className="h-4 w-4 mr-2" />
-              工位映射
-            </TabsTrigger>
-            <TabsTrigger value="aging">
-              <Zap className="h-4 w-4 mr-2" />
-              老化配置
             </TabsTrigger>
           </TabsList>
           
@@ -92,14 +72,6 @@ const ProtocolManagement = () => {
           
           <TabsContent value="probe-config" className="mt-6">
             <DeviceProbeConfig />
-          </TabsContent>
-          
-          <TabsContent value="workstation" className="mt-6">
-            <WorkstationDeviceMapping />
-          </TabsContent>
-          
-          <TabsContent value="aging" className="mt-6">
-            <AgingProcessConfiguration />
           </TabsContent>
         </Tabs>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,8 @@ const DeviceProbeConfig = () => {
 
   const [deviceTypes] = useState<DeviceType[]>([
     { id: 'type1', name: '温度传感器' },
-    { id: 'type2', name: '电力监测器' }
+    { id: 'type2', name: '电力监测器' },
+    { id: 'type3', name: '压力传感器' }
   ]);
 
   const [newProbeConfig, setNewProbeConfig] = useState<Omit<DeviceProbeConfig, 'id' | 'createdAt'>>({
@@ -53,30 +54,64 @@ const DeviceProbeConfig = () => {
     description: ''
   });
 
-  const handleAddProbeConfig = () => {
+  // 确保每个设备类型都有Probe条件
+  useEffect(() => {
+    const missingTypes = deviceTypes.filter(type => 
+      !probeConfigs.some(config => config.deviceTypeId === type.id)
+    );
+    
+    if (missingTypes.length > 0) {
+      const newConfigs = missingTypes.map(type => ({
+        id: `probe-${type.id}-${Date.now()}`,
+        deviceTypeId: type.id,
+        probeScript: '',
+        description: `${type.name}在线条件`,
+        createdAt: new Date().toISOString().split('T')[0]
+      }));
+      
+      setProbeConfigs(prev => [...prev, ...newConfigs]);
+    }
+  }, [deviceTypes, probeConfigs]);
+
+  const handleAddOrUpdateProbeConfig = () => {
     if (!newProbeConfig.deviceTypeId || !newProbeConfig.probeScript) {
       showError('请选择设备类型并输入Probe条件');
       return;
     }
 
-    const probeConfig: DeviceProbeConfig = {
-      id: `probe-${Date.now()}`,
-      ...newProbeConfig,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
+    const existingIndex = probeConfigs.findIndex(config => config.deviceTypeId === newProbeConfig.deviceTypeId);
+    
+    if (existingIndex >= 0) {
+      // 更新现有配置
+      const updatedConfigs = [...probeConfigs];
+      updatedConfigs[existingIndex] = {
+        ...updatedConfigs[existingIndex],
+        probeScript: newProbeConfig.probeScript,
+        description: newProbeConfig.description
+      };
+      setProbeConfigs(updatedConfigs);
+      showSuccess('设备Probe条件更新成功');
+    } else {
+      // 添加新配置
+      const probeConfig: DeviceProbeConfig = {
+        id: `probe-${Date.now()}`,
+        ...newProbeConfig,
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      setProbeConfigs([...probeConfigs, probeConfig]);
+      showSuccess('设备Probe条件添加成功');
+    }
 
-    setProbeConfigs([...probeConfigs, probeConfig]);
     setNewProbeConfig({
       deviceTypeId: '',
       probeScript: '',
       description: ''
     });
-    showSuccess('设备Probe条件添加成功');
   };
 
   const handleDeleteProbeConfig = (id: string) => {
-    setProbeConfigs(probeConfigs.filter(config => config.id !== id));
-    showSuccess('设备Probe条件删除成功');
+    // 不允许删除设备类型的Probe条件，只能更新
+    showError('设备Probe条件不能删除，只能更新');
   };
 
   const validateProbeScript = (script: string) => {
@@ -84,11 +119,15 @@ const DeviceProbeConfig = () => {
     return validOperators.some(op => script.includes(op));
   };
 
+  const getDeviceTypeById = (id: string) => {
+    return deviceTypes.find(type => type.id === id);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>添加设备Probe条件</CardTitle>
+          <CardTitle>设备Probe条件配置</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -96,7 +135,14 @@ const DeviceProbeConfig = () => {
               <Label htmlFor="deviceType">设备类型 *</Label>
               <Select
                 value={newProbeConfig.deviceTypeId}
-                onValueChange={(value) => setNewProbeConfig({ ...newProbeConfig, deviceTypeId: value })}
+                onValueChange={(value) => {
+                  setNewProbeConfig({ ...newProbeConfig, deviceTypeId: value });
+                  // 自动填充描述
+                  const deviceType = getDeviceTypeById(value);
+                  if (deviceType && !newProbeConfig.description) {
+                    setNewProbeConfig(prev => ({ ...prev, description: `${deviceType.name}在线条件` }));
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="选择设备类型" />
@@ -141,9 +187,18 @@ const DeviceProbeConfig = () => {
               </p>
             </div>
           </div>
-          <Button onClick={handleAddProbeConfig} className="w-full">
-            <Plus className="mr-2 h-4 w-4" />
-            添加Probe条件
+          <Button onClick={handleAddOrUpdateProbeConfig} className="w-full">
+            {newProbeConfig.deviceTypeId && probeConfigs.some(c => c.deviceTypeId === newProbeConfig.deviceTypeId) ? (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                更新Probe条件
+              </>
+            ) : (
+              <>
+                <Plus className="mr-2 h-4 w-4" />
+                添加Probe条件
+              </>
+            )}
           </Button>
         </CardContent>
       </Card>
@@ -160,6 +215,7 @@ const DeviceProbeConfig = () => {
                 <TableHead>Probe条件</TableHead>
                 <TableHead>描述</TableHead>
                 <TableHead>创建日期</TableHead>
+                <TableHead>状态</TableHead>
                 <TableHead>操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -167,22 +223,37 @@ const DeviceProbeConfig = () => {
               {probeConfigs.map((config) => (
                 <TableRow key={config.id}>
                   <TableCell className="font-medium">
-                    {deviceTypes.find(t => t.id === config.deviceTypeId)?.name || '未知'}
+                    {getDeviceTypeById(config.deviceTypeId)?.name || '未知'}
                   </TableCell>
                   <TableCell className="max-w-xs truncate font-mono" title={config.probeScript}>
-                    {config.probeScript}
+                    {config.probeScript || (
+                      <span className="text-red-500">未配置</span>
+                    )}
                   </TableCell>
                   <TableCell className="max-w-xs truncate" title={config.description}>
                     {config.description}
                   </TableCell>
                   <TableCell>{config.createdAt}</TableCell>
                   <TableCell>
+                    {config.probeScript ? (
+                      <span className="text-green-500">已配置</span>
+                    ) : (
+                      <span className="text-red-500">未配置</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
-                      onClick={() => handleDeleteProbeConfig(config.id)}
+                      onClick={() => {
+                        setNewProbeConfig({
+                          deviceTypeId: config.deviceTypeId,
+                          probeScript: config.probeScript,
+                          description: config.description
+                        });
+                      }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      编辑
                     </Button>
                   </TableCell>
                 </TableRow>

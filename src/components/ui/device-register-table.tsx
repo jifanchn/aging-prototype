@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Trash2, Save, Download, Upload, Info } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface RegisterMapping {
   id: string;
@@ -354,18 +354,17 @@ const DeviceRegisterTable = () => {
               {/* 新增的变换参数配置 */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className="space-y-2">
-                  <Label htmlFor="scale">比例系数 (A)
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="ml-1 h-4 w-4 inline text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>实际值 = A × 原始值 + B</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </Label>
+                  <div className="flex items-center space-x-1">
+                    <Label htmlFor="scale">比例系数 (A)</Label>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>实际值 = A × 原始值 + B</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   <Input
                     id="scale"
                     type="number"
@@ -376,18 +375,17 @@ const DeviceRegisterTable = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="offset">偏移量 (B)
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="ml-1 h-4 w-4 inline text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>实际值 = A × 原始值 + B</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </Label>
+                  <div className="flex items-center space-x-1">
+                    <Label htmlFor="offset">偏移量 (B)</Label>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>实际值 = A × 原始值 + B</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   <Input
                     id="offset"
                     type="number"
