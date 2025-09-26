@@ -238,6 +238,76 @@ const WorkstationOverview = () => {
     return [...devices.slice(0, limit).map(device => device.deviceType), '...'];
   };
 
+  const getControlButtons = (workstation: Workstation) => {
+    const buttons = [];
+    
+    if (workstation.status === 'stopped' || workstation.status === 'failed') {
+      buttons.push(
+        <Button 
+          key="start" 
+          size="sm" 
+          variant="outline"
+          className="bg-green-500 hover:bg-green-600 text-white"
+          onClick={() => showSuccess(`工位 ${workstation.name} 启动成功`)}
+        >
+          <Play className="h-3 w-3 mr-1" />
+          启动
+        </Button>
+      );
+    }
+    
+    if (workstation.status === 'running') {
+      buttons.push(
+        <Button 
+          key="pause" 
+          size="sm" 
+          variant="outline"
+          className="bg-yellow-500 hover:bg-yellow-600 text-white"
+          onClick={() => showSuccess(`工位 ${workstation.name} 暂停成功`)}
+        >
+          <PauseCircle className="h-3 w-3 mr-1" />
+          暂停
+        </Button>
+      );
+    }
+    
+    if (workstation.status === 'paused') {
+      buttons.push(
+        <Button 
+          key="resume" 
+          size="sm" 
+          variant="outline"
+          className="bg-blue-500 hover:bg-blue-600 text-white"
+          onClick={() => showSuccess(`工位 ${workstation.name} 继续成功`)}
+        >
+          <Play className="h-3 w-3 mr-1" />
+          继续
+        </Button>
+      );
+    }
+    
+    if (workstation.status === 'running' || workstation.status === 'paused') {
+      buttons.push(
+        <Button 
+          key="stop" 
+          size="sm" 
+          variant="outline"
+          className="bg-red-500 hover:bg-red-600 text-white"
+          onClick={() => {
+            if (window.confirm(`确定要停止工位 ${workstation.name} 吗？`)) {
+              showSuccess(`工位 ${workstation.name} 停止成功`);
+            }
+          }}
+        >
+          <StopCircle className="h-3 w-3 mr-1" />
+          停止
+        </Button>
+      );
+    }
+    
+    return buttons;
+  };
+
   return (
     <div>
       <Card className="mb-6">
@@ -285,16 +355,18 @@ const WorkstationOverview = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* 老化配置信息 */}
-              {workstation.currentAgingProcess && (
-                <div className="flex items-center space-x-2 text-sm">
-                  <span className="text-muted-foreground">老化配置:</span>
+              {/* 老化配置信息 - 始终显示占位符确保对齐 */}
+              <div className="flex items-center space-x-2 text-sm min-h-6">
+                <span className="text-muted-foreground">老化配置:</span>
+                {workstation.currentAgingProcess ? (
                   <span className="font-medium text-blue-600">{workstation.currentAgingProcess}</span>
-                </div>
-              )}
+                ) : (
+                  <span className="text-muted-foreground italic">无激活配置</span>
+                )}
+              </div>
               
               {/* 在线设备信息 - 显示设备类型，悬浮显示详细信息 */}
-              <div className="space-y-1">
+              <div className="space-y-1 min-h-12">
                 <div className="text-sm text-muted-foreground">在线设备:</div>
                 {workstation.onlineDevices.length > 0 ? (
                   <div 
@@ -318,7 +390,7 @@ const WorkstationOverview = () => {
               </div>
 
               {/* 日志显示 */}
-              <div className="space-y-1">
+              <div className="space-y-1 min-h-16">
                 <div className="text-sm text-muted-foreground">最新日志:</div>
                 {workstation.logs.length > 0 && (
                   <div 
@@ -331,45 +403,18 @@ const WorkstationOverview = () => {
               </div>
 
               {/* 操作按钮 */}
-              <div className="flex space-x-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2 min-h-12">
                 <Button 
                   size="sm" 
                   variant="outline" 
                   onClick={() => handleViewDetails(workstation)}
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                 >
                   详情
                 </Button>
-                <Button 
-                  size="sm" 
-                  onClick={() => {
-                    const action = window.prompt('选择操作: start, stop, edit, delete');
-                    if (action) {
-                      switch(action.toLowerCase()) {
-                        case 'start':
-                          showSuccess(`工位 ${workstation.name} 启动成功`);
-                          break;
-                        case 'stop':
-                          if (window.confirm(`确定要停止工位 ${workstation.name} 吗？`)) {
-                            showSuccess(`工位 ${workstation.name} 停止成功`);
-                          }
-                          break;
-                        case 'edit':
-                          showSuccess(`编辑工位 ${workstation.name}`);
-                          break;
-                        case 'delete':
-                          if (window.confirm(`确定要删除工位 ${workstation.name} 吗？删除后无法恢复！`)) {
-                            showSuccess(`工位 ${workstation.name} 删除成功`);
-                          }
-                          break;
-                        default:
-                          break;
-                      }
-                    }
-                  }}
-                >
-                  操作
-                </Button>
+                <div className="flex flex-wrap gap-1 flex-1 min-w-0 justify-end">
+                  {getControlButtons(workstation)}
+                </div>
               </div>
             </CardContent>
           </Card>
