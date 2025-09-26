@@ -311,7 +311,7 @@ const WorkstationOverview = () => {
   };
 
   return (
-    <div>
+    <div className="p-6">
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -404,7 +404,7 @@ const WorkstationOverview = () => {
                 )}
               </div>
 
-              {/* 操作按钮 - 固定黑色操作按钮，修复悬停样式 */}
+              {/* 操作按钮 - 固定黑色操作按钮 */}
               <div className="flex flex-wrap gap-2 pt-2 min-h-12">
                 <Button 
                   size="sm" 

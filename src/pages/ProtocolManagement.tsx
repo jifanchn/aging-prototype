@@ -39,41 +39,43 @@ const ProtocolManagement = () => {
       
       <div className="container mx-auto py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid grid-cols-4">
-            <TabsTrigger value="device-types">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="device-types" className="py-2">
               <Package className="h-4 w-4 mr-2" />
               设备类型
             </TabsTrigger>
-            <TabsTrigger value="scan-config">
+            <TabsTrigger value="scan-config" className="py-2">
               <Scan className="h-4 w-4 mr-2" />
               寄存器扫描
             </TabsTrigger>
-            <TabsTrigger value="register-table">
+            <TabsTrigger value="register-table" className="py-2">
               <Database className="h-4 w-4 mr-2" />
               寄存器表
             </TabsTrigger>
-            <TabsTrigger value="probe-config">
+            <TabsTrigger value="probe-config" className="py-2">
               <Eye className="h-4 w-4 mr-2" />
               Probe条件
             </TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="device-types" className="mt-6">
+        </Tabs>
+
+        <Card className="w-full">
+          <TabsContent value="device-types" className="p-0">
             <DeviceTypeManagement />
           </TabsContent>
           
-          <TabsContent value="scan-config" className="mt-6">
+          <TabsContent value="scan-config" className="p-0">
             <RegisterScanConfig />
           </TabsContent>
           
-          <TabsContent value="register-table" className="mt-6">
+          <TabsContent value="register-table" className="p-0">
             <DeviceRegisterTable />
           </TabsContent>
           
-          <TabsContent value="probe-config" className="mt-6">
+          <TabsContent value="probe-config" className="p-0">
             <DeviceProbeConfig />
           </TabsContent>
-        </Tabs>
+        </Card>
       </div>
       
       <MadeWithDyad />

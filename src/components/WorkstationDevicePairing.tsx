@@ -197,7 +197,7 @@ const WorkstationDevicePairing = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>{isEditing ? '编辑设备实例' : '添加设备实例到工位'}</CardTitle>

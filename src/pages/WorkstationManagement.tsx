@@ -32,24 +32,26 @@ const WorkstationManagement = () => {
       
       <div className="container mx-auto py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList>
-            <TabsTrigger value="overview">工位概览</TabsTrigger>
-            <TabsTrigger value="device-pairing">工位-设备配对</TabsTrigger>
-            <TabsTrigger value="aging-pairing">工位-老化配对</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="overview" className="py-2">工位概览</TabsTrigger>
+            <TabsTrigger value="device-pairing" className="py-2">工位-设备配对</TabsTrigger>
+            <TabsTrigger value="aging-pairing" className="py-2">工位-老化配对</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="overview">
+        </Tabs>
+
+        <Card className="w-full">
+          <TabsContent value="overview" className="p-0">
             <WorkstationOverview />
           </TabsContent>
           
-          <TabsContent value="device-pairing">
+          <TabsContent value="device-pairing" className="p-0">
             <WorkstationDevicePairing />
           </TabsContent>
           
-          <TabsContent value="aging-pairing">
+          <TabsContent value="aging-pairing" className="p-0">
             <WorkstationAgingPairing />
           </TabsContent>
-        </Tabs>
+        </Card>
       </div>
       
       <MadeWithDyad />

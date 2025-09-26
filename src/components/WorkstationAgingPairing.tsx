@@ -130,7 +130,7 @@ const WorkstationAgingPairing = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>{isEditing ? '编辑工位-老化流程配对' : '创建工位-老化流程配对'}</CardTitle>
