@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import GlobalChecksTab from "@/components/aging-process/GlobalChecksTab";
 import StateManagementTab from "@/components/aging-process/StateManagementTab";
-import MesReportingTab from "@/components/aging-process/MesReportingTab";
+import RecordingAndReportingTab from "@/components/aging-process/RecordingAndReportingTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ProcessConfigurationTab = () => {
@@ -185,7 +185,7 @@ elif current_temp <= 20:
             <TabsList>
               <TabsTrigger value="global-checks">全局检查</TabsTrigger>
               <TabsTrigger value="state-management">状态管理</TabsTrigger>
-              <TabsTrigger value="mes-reporting">上报MES</TabsTrigger>
+              <TabsTrigger value="mes-reporting">记录与上报</TabsTrigger>
             </TabsList>
 
             <TabsContent value="global-checks">
@@ -197,7 +197,7 @@ elif current_temp <= 20:
             </TabsContent>
 
             <TabsContent value="mes-reporting">
-              <MesReportingTab />
+              <RecordingAndReportingTab />
             </TabsContent>
           </Tabs>
         </>
