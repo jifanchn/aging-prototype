@@ -7,7 +7,9 @@ import {
   Play,
   Pause,
   X,
-  Check
+  Check,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import GlobalChecksTab from "@/components/aging-process/GlobalChecksTab";
 import StateManagementTab from "@/components/aging-process/StateManagementTab";
@@ -19,6 +21,31 @@ const ProcessConfigurationTab = () => {
     { id: 'proc1', name: '高温老化流程 A' },
     { id: 'proc2', name: '标准老化流程 B' }
   ]);
+  const [showScriptExamples, setShowScriptExamples] = useState(false);
+
+  const scriptExamples = `# 脚本示例:
+# 全局检查和状态脚本中可用的函数和变量
+
+# 系统变量和函数
+system.aging_time        # 老化总时间 (秒)
+system.state_time        # 当前状态持续时间 (秒)
+system.log("message")    # 记录日志
+system.get_state()       # 获取当前状态名称
+
+# 设备访问 (通过设备别名)
+dev1.get("point_name")   # 获取设备点值
+dev1.set("point_name", value)  # 设置设备点值
+
+# 跳转函数
+jumpstate("state_name")  # 跳转到指定状态
+next()                   # 跳转到下一个状态
+
+# 预定义状态
+# "start", "pause", "fail", "success", "end"
+
+# 条件检查示例
+if dev1.get("temperature") > 50:
+    jumpstate("end")`;
 
   return (
     <div className="space-y-6">
@@ -74,6 +101,29 @@ const ProcessConfigurationTab = () => {
                 </div>
               </div>
             </CardContent>
+          </Card>
+
+          {/* 脚本示例 with toggle */}
+          <Card>
+            <Button
+              variant="ghost"
+              className="w-full justify-between p-4"
+              onClick={() => setShowScriptExamples(!showScriptExamples)}
+            >
+              <span className="font-medium">脚本示例</span>
+              {showScriptExamples ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
+            {showScriptExamples && (
+              <div className="p-4 bg-muted/20">
+                <pre className="text-xs bg-background p-3 rounded font-mono overflow-x-auto">
+                  {scriptExamples}
+                </pre>
+              </div>
+            )}
           </Card>
 
           {/* Tabs for Global Checks and State Management */}

@@ -9,9 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { 
   Plus, 
   Trash2,
-  Circle,
-  ChevronDown,
-  ChevronUp
+  Circle
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 
@@ -35,28 +33,6 @@ const GlobalChecksTab = () => {
   ]);
 
   const [newGlobalCheck, setNewGlobalCheck] = useState({ pythonScript: '', condition: '', jumpTarget: 'pause', mode: 'script' as 'script' | 'condition' });
-  const [showScriptExamples, setShowScriptExamples] = useState(false);
-
-  const scriptExamples = `# 全局检查脚本示例:
-# 全局检查在每个循环开始时执行
-
-# 条件检查示例
-if dev1.get("temperature") > 50:
-    jumpstate("end")
-
-# 系统变量和函数
-system.aging_time        # 老化总时间 (秒)
-system.log("message")   # 记录日志
-
-# 设备访问
-dev1.get("point_name")   # 获取设备点值
-dev1.set("point_name", value)  # 设置设备点值
-
-# 跳转函数
-jumpstate("pause")      # 跳转到暂停状态
-jumpstate("fail")       # 跳转到失败状态
-jumpstate("success")    # 跳转到成功状态
-jumpstate("end")        # 跳转到结束状态`;
 
   const handleAddGlobalCheck = () => {
     if (newGlobalCheck.mode === 'script' && !newGlobalCheck.pythonScript.trim()) {
@@ -161,31 +137,6 @@ jumpstate("end")        # 跳转到结束状态`;
               </Button>
             </div>
           </div>
-
-          {/* 脚本示例 with toggle */}
-          {newGlobalCheck.mode === 'script' && (
-            <div className="border rounded-lg">
-              <Button
-                variant="ghost"
-                className="w-full justify-between p-4"
-                onClick={() => setShowScriptExamples(!showScriptExamples)}
-              >
-                <span className="font-medium">脚本示例</span>
-                {showScriptExamples ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </Button>
-              {showScriptExamples && (
-                <div className="p-4 bg-muted/20">
-                  <pre className="text-xs bg-background p-3 rounded font-mono overflow-x-auto">
-                    {scriptExamples}
-                  </pre>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* 已配置的全局检查 */}
           {globalChecks.length > 0 && (
