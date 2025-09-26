@@ -9,7 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { 
   Plus, 
   Trash2,
-  Circle
+  Circle,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 
@@ -25,7 +27,7 @@ const GlobalChecksTab = () => {
   const [globalChecks, setGlobalChecks] = useState<GlobalCheck[]>([
     { 
       id: 'gc1', 
-      pythonScript: 'if dev1.temperature > 50:\n    jumpstate("end")', 
+      pythonScript: 'if dev1.get("temperature") > 50:\n    jumpstate("end")', 
       condition: '',
       jumpTarget: 'end',
       mode: 'script'
@@ -33,23 +35,28 @@ const GlobalChecksTab = () => {
   ]);
 
   const [newGlobalCheck, setNewGlobalCheck] = useState({ pythonScript: '', condition: '', jumpTarget: 'pause', mode: 'script' as 'script' | 'condition' });
+  const [showScriptExamples, setShowScriptExamples] = useState(false);
 
-  const scriptExamples = `# Python脚本示例:
-jumpstate("pause")      # 跳转到暂停状态
-jumpstate("fail")       # 跳转到失败状态  
-jumpstate("success")    # 跳转到成功状态
+  const scriptExamples = `# 全局检查脚本示例:
+# 全局检查在每个循环开始时执行
 
-# 获取设备数据
-dev1.get_last_timestamp  # 获取最后时间戳
-dev1.get("point1")       # 获取设备点值
-
-# 设置设备数据  
-dev1.set("point1", 10)   # 设置设备点值
+# 条件检查示例
+if dev1.get("temperature") > 50:
+    jumpstate("end")
 
 # 系统变量和函数
-system.aging_time        # 老化时间 (float32)
-system.log("TEXT")       # 记录日志
-system.get_state()       # 获取当前状态`;
+system.aging_time        # 老化总时间 (秒)
+system.log("message")   # 记录日志
+
+# 设备访问
+dev1.get("point_name")   # 获取设备点值
+dev1.set("point_name", value)  # 设置设备点值
+
+# 跳转函数
+jumpstate("pause")      # 跳转到暂停状态
+jumpstate("fail")       # 跳转到失败状态
+jumpstate("success")    # 跳转到成功状态
+jumpstate("end")        # 跳转到结束状态`;
 
   const handleAddGlobalCheck = () => {
     if (newGlobalCheck.mode === 'script' && !newGlobalCheck.pythonScript.trim()) {
@@ -81,33 +88,6 @@ system.get_state()       # 获取当前状态`;
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>全局检查说明</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 text-sm">
-            <p>全局检查在每个循环开始时执行，用于监控整个老化流程的关键条件。</p>
-            <p><strong>可用系统变量:</strong></p>
-            <ul className="list-disc list-inside space-y-1">
-              <li><code className="bg-muted px-1 rounded">system.aging_time</code> - 老化总时间 (秒)</li>
-              <li><code className="bg-muted px-1 rounded">system.get_state()</code> - 获取当前状态名称</li>
-              <li><code className="bg-muted px-1 rounded">system.log("message")</code> - 记录日志</li>
-            </ul>
-            <p><strong>跳转函数:</strong></p>
-            <ul className="list-disc list-inside space-y-1">
-              <li><code className="bg-muted px-1 rounded">jumpstate("state_name")</code> - 跳转到指定状态</li>
-              <li>预定义状态: <code className="bg-muted px-1 rounded">"start"</code>, <code className="bg-muted px-1 rounded">"pause"</code>, <code className="bg-muted px-1 rounded">"fail"</code>, <code className="bg-muted px-1 rounded">"success"</code>, <code className="bg-muted px-1 rounded">"end"</code></li>
-            </ul>
-            <p><strong>设备访问:</strong></p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>通过设备别名访问: <code className="bg-muted px-1 rounded">dev1.get("point_name")</code></li>
-              <li>设置设备值: <code className="bg-muted px-1 rounded">dev1.set("point_name", value)</code></li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
-
       <Card>
         <CardHeader>
           <CardTitle>全局检查配置</CardTitle>
@@ -153,7 +133,7 @@ system.get_state()       # 获取当前状态`;
                   <div>
                     <Label>条件配置</Label>
                     <Input
-                      placeholder="添加条件，如: dev1.temperature > 50"
+                      placeholder="添加条件，如: dev1.get('temperature') > 50"
                       value={newGlobalCheck.condition}
                       onChange={(e) => setNewGlobalCheck({ ...newGlobalCheck, condition: e.target.value })}
                     />
@@ -182,13 +162,28 @@ system.get_state()       # 获取当前状态`;
             </div>
           </div>
 
-          {/* 脚本示例 */}
+          {/* 脚本示例 with toggle */}
           {newGlobalCheck.mode === 'script' && (
-            <div className="p-4 bg-muted/20 rounded-lg">
-              <Label className="mb-2">脚本示例</Label>
-              <pre className="text-xs bg-background p-3 rounded font-mono overflow-x-auto">
-                {scriptExamples}
-              </pre>
+            <div className="border rounded-lg">
+              <Button
+                variant="ghost"
+                className="w-full justify-between p-4"
+                onClick={() => setShowScriptExamples(!showScriptExamples)}
+              >
+                <span className="font-medium">脚本示例</span>
+                {showScriptExamples ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+              {showScriptExamples && (
+                <div className="p-4 bg-muted/20">
+                  <pre className="text-xs bg-background p-3 rounded font-mono overflow-x-auto">
+                    {scriptExamples}
+                  </pre>
+                </div>
+              )}
             </div>
           )}
 
