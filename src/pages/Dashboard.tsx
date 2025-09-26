@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Badge } from "@/components/ui/badge";
-import WorkstationDetailView from "@/components/ui/workstation-detail-view";
+import WorkstationDetailView from "@/components/workstation/WorkstationDetailView";
 
 interface Workstation {
   id: number;

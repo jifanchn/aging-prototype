@@ -11,10 +11,10 @@ import {
   Scan,
   Eye
 } from "lucide-react";
-import DeviceTypeManagement from "@/components/ui/device-type-management";
-import RegisterScanConfig from "@/components/ui/register-scan-config";
-import DeviceRegisterTable from "@/components/ui/device-register-table";
-import DeviceProbeConfig from "@/components/ui/device-probe-config";
+import DeviceTypeManagement from "@/components/protocol/DeviceTypeManagement";
+import RegisterScanConfig from "@/components/protocol/RegisterScanConfig";
+import DeviceRegisterTable from "@/components/protocol/DeviceRegisterTable";
+import DeviceProbeConfig from "@/components/protocol/DeviceProbeConfig";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 

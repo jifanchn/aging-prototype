@@ -10,8 +10,8 @@ import {
   Settings,
   Plus
 } from "lucide-react";
-import WorkstationCard from "@/components/ui/workstation-card";
-import WorkstationDetailView from "@/components/ui/workstation-detail-view";
+import WorkstationCard from "@/components/workstation/WorkstationCard";
+import WorkstationDetailView from "@/components/workstation/WorkstationDetailView";
 import { showSuccess } from "@/utils/toast";
 
 interface Workstation {

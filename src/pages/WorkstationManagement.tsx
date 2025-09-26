@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { 
   Plus
 } from "lucide-react";
-import WorkstationOverview from "@/components/WorkstationOverview";
-import WorkstationDevicePairing from "@/components/WorkstationDevicePairing";
-import WorkstationAgingPairing from "@/components/WorkstationAgingPairing";
+import WorkstationOverview from "@/components/workstation/WorkstationOverview";
+import WorkstationDevicePairing from "@/components/workstation/WorkstationDevicePairing";
+import WorkstationAgingPairing from "@/components/workstation/WorkstationAgingPairing";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showSuccess } from "@/utils/toast";
