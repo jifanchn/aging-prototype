@@ -85,7 +85,7 @@ const Login = () => {
             </div>
             <div className="text-xs text-muted-foreground space-y-1">
               <p>可用用户名: admin, viewer, maintainer, operator</p>
-              <p>密码与用户名相同</p>
+              <p>默认用户名密码相同</p>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? '登录中...' : '登录'}

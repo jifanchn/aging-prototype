@@ -17,9 +17,11 @@ import DeviceRegisterTable from "@/components/protocol/DeviceRegisterTable";
 import DeviceProbeConfig from "@/components/protocol/DeviceProbeConfig";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const ProtocolManagement = () => {
   const [activeTab, setActiveTab] = useState('device-types');
+  const { hasPermission } = usePermissions();
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,35 +43,47 @@ const ProtocolManagement = () => {
               <Package className="h-4 w-4 mr-2" />
               设备类型
             </TabsTrigger>
-            <TabsTrigger value="scan-config">
-              <Scan className="h-4 w-4 mr-2" />
-              寄存器扫描
-            </TabsTrigger>
-            <TabsTrigger value="register-table">
-              <Database className="h-4 w-4 mr-2" />
-              寄存器表
-            </TabsTrigger>
-            <TabsTrigger value="probe-config">
-              <Eye className="h-4 w-4 mr-2" />
-              Probe条件
-            </TabsTrigger>
+            {hasPermission('edit_protocols') && (
+              <TabsTrigger value="scan-config">
+                <Scan className="h-4 w-4 mr-2" />
+                寄存器扫描
+              </TabsTrigger>
+            )}
+            {hasPermission('edit_protocols') && (
+              <TabsTrigger value="register-table">
+                <Database className="h-4 w-4 mr-2" />
+                寄存器表
+              </TabsTrigger>
+            )}
+            {hasPermission('edit_protocols') && (
+              <TabsTrigger value="probe-config">
+                <Eye className="h-4 w-4 mr-2" />
+                Probe条件
+              </TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="device-types" className="mt-6">
             <DeviceTypeManagement />
           </TabsContent>
           
-          <TabsContent value="scan-config" className="mt-6">
-            <RegisterScanConfig />
-          </TabsContent>
+          {hasPermission('edit_protocols') && (
+            <TabsContent value="scan-config" className="mt-6">
+              <RegisterScanConfig />
+            </TabsContent>
+          )}
           
-          <TabsContent value="register-table" className="mt-6">
-            <DeviceRegisterTable />
-          </TabsContent>
+          {hasPermission('edit_protocols') && (
+            <TabsContent value="register-table" className="mt-6">
+              <DeviceRegisterTable />
+            </TabsContent>
+          )}
           
-          <TabsContent value="probe-config" className="mt-6">
-            <DeviceProbeConfig />
-          </TabsContent>
+          {hasPermission('edit_protocols') && (
+            <TabsContent value="probe-config" className="mt-6">
+              <DeviceProbeConfig />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
       

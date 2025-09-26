@@ -13,15 +13,25 @@ import NotFound from "./pages/NotFound";
 import Navbar from "@/components/ui/navbar";
 import Login from "./pages/Login";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const queryClient = new QueryClient();
 
-// Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+// Protected route component with permission check
+const ProtectedRoute = ({ children, requirePermission }: { 
+  children: React.ReactNode;
+  requirePermission?: string;
+}) => {
   const { user } = useAuth();
+  const { canAccess } = usePermissions();
   
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+  
+  // Check page-specific permissions
+  if (requirePermission && !canAccess(requirePermission)) {
+    return <Navigate to="/" replace />;
   }
   
   return <>{children}</>;
@@ -113,7 +123,7 @@ const App = () => (
             <Route 
               path="/system" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requirePermission="/system">
                   <>
                     <Navbar />
                     <SystemManagement />

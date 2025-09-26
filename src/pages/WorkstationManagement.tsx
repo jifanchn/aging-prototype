@@ -12,9 +12,11 @@ import WorkstationAgingPairing from "@/components/workstation/WorkstationAgingPa
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showSuccess } from "@/utils/toast";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const WorkstationManagement = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const { hasPermission } = usePermissions();
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,21 +33,29 @@ const WorkstationManagement = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="overview">工位概览</TabsTrigger>
-            <TabsTrigger value="device-pairing">工位-设备配对</TabsTrigger>
-            <TabsTrigger value="aging-pairing">工位-老化配对</TabsTrigger>
+            {hasPermission('edit_device_pairing') && (
+              <TabsTrigger value="device-pairing">工位-设备配对</TabsTrigger>
+            )}
+            {hasPermission('edit_aging_pairing') && (
+              <TabsTrigger value="aging-pairing">工位-老化配对</TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="overview">
             <WorkstationOverview />
           </TabsContent>
           
-          <TabsContent value="device-pairing">
-            <WorkstationDevicePairing />
-          </TabsContent>
+          {hasPermission('edit_device_pairing') && (
+            <TabsContent value="device-pairing">
+              <WorkstationDevicePairing />
+            </TabsContent>
+          )}
           
-          <TabsContent value="aging-pairing">
-            <WorkstationAgingPairing />
-          </TabsContent>
+          {hasPermission('edit_aging_pairing') && (
+            <TabsContent value="aging-pairing">
+              <WorkstationAgingPairing />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
       

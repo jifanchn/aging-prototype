@@ -7,9 +7,11 @@ import ProcessConfigurationTab from "@/components/aging-process/ProcessConfigura
 import ProcessRecordingTab from "@/components/aging-process/ProcessRecordingTab";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const AgingProcessManagement = () => {
   const [activeTab, setActiveTab] = useState('process-management');
+  const { hasPermission } = usePermissions();
 
   return (
     <div className="min-h-screen bg-background">
@@ -25,21 +27,29 @@ const AgingProcessManagement = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="process-management">流程管理</TabsTrigger>
-            <TabsTrigger value="process-configuration">流程配置</TabsTrigger>
-            <TabsTrigger value="process-recording">流程记录配置</TabsTrigger>
+            {hasPermission('edit_aging_processes') && (
+              <TabsTrigger value="process-configuration">流程配置</TabsTrigger>
+            )}
+            {hasPermission('edit_aging_processes') && (
+              <TabsTrigger value="process-recording">流程记录配置</TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="process-management">
             <ProcessManagementTab />
           </TabsContent>
           
-          <TabsContent value="process-configuration">
-            <ProcessConfigurationTab />
-          </TabsContent>
+          {hasPermission('edit_aging_processes') && (
+            <TabsContent value="process-configuration">
+              <ProcessConfigurationTab />
+            </TabsContent>
+          )}
           
-          <TabsContent value="process-recording">
-            <ProcessRecordingTab />
-          </TabsContent>
+          {hasPermission('edit_aging_processes') && (
+            <TabsContent value="process-recording">
+              <ProcessRecordingTab />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
       

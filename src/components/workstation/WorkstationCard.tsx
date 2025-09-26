@@ -18,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface WorkstationCardProps {
   id: number;
@@ -82,24 +83,33 @@ const WorkstationCard = ({
   onActionClick 
 }: WorkstationCardProps) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { hasPermission } = usePermissions();
 
-  // Get available actions based on status
+  // Get available actions based on status and permissions
   const getAvailableActions = () => {
     const actions = [];
     
     if (status === 'stopped' || status === 'failed') {
-      actions.push({ label: '启动', value: 'start', icon: Play });
+      if (hasPermission('control_aging_processes')) {
+        actions.push({ label: '启动', value: 'start', icon: Play });
+      }
     }
     
     if (status === 'running' || status === 'paused') {
-      actions.push({ label: '停止', value: 'stop', icon: StopCircle });
+      if (hasPermission('control_aging_processes')) {
+        actions.push({ label: '停止', value: 'stop', icon: StopCircle });
+      }
     }
     
     if (status === 'running') {
-      actions.push({ label: '标记失败', value: 'fail', icon: XCircle });
+      if (hasPermission('control_aging_processes')) {
+        actions.push({ label: '标记失败', value: 'fail', icon: XCircle });
+      }
     }
     
-    actions.push({ label: '删除工位', value: 'delete', icon: XCircle });
+    if (hasPermission('delete_workstations')) {
+      actions.push({ label: '删除工位', value: 'delete', icon: XCircle });
+    }
     
     return actions;
   };
@@ -182,30 +192,36 @@ const WorkstationCard = ({
           >
             详情
           </Button>
-          <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {availableActions.map((action) => {
-                const Icon = action.icon;
-                return (
-                  <DropdownMenuItem
-                    key={action.value}
-                    onClick={() => {
-                      onActionClick(action.value as any);
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    <Icon className="h-4 w-4 mr-2" />
-                    {action.label}
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {availableActions.length > 0 ? (
+            <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {availableActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <DropdownMenuItem
+                      key={action.value}
+                      onClick={() => {
+                        onActionClick(action.value as any);
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      <Icon className="h-4 w-4 mr-2" />
+                      {action.label}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button size="sm" variant="outline" disabled className="text-muted-foreground">
+              无可用操作
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

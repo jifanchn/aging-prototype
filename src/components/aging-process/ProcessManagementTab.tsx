@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import CreateProcessModal from "@/components/aging-process/CreateProcessModal";
+import { usePermissions } from "@/hooks/usePermissions";
 import { 
   Dialog, 
   DialogContent, 
@@ -46,6 +47,7 @@ interface AgingProcess {
 }
 
 const ProcessManagementTab = () => {
+  const { hasPermission } = usePermissions();
   const [processes, setProcesses] = useState<AgingProcess[]>([
     { 
       id: 'proc1', 
@@ -269,10 +271,12 @@ const ProcessManagementTab = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>老化流程列表</CardTitle>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            新建流程
-          </Button>
+          {hasPermission('edit_aging_processes') && (
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              新建流程
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -295,14 +299,16 @@ const ProcessManagementTab = () => {
                   </div>
                   <div className="flex flex-col space-y-2 ml-4">
                     <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSelectProcess(process)}
-                      >
-                        <Settings className="h-3 w-3 mr-1" />
-                        配置
-                      </Button>
+                      {hasPermission('edit_aging_processes') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSelectProcess(process)}
+                        >
+                          <Settings className="h-3 w-3 mr-1" />
+                          配置
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -310,30 +316,36 @@ const ProcessManagementTab = () => {
                       >
                         <Download className="h-3 w-3" />
                       </Button>
+                      {hasPermission('edit_aging_processes') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => triggerImport(process.id)}
+                        >
+                          <Upload className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                    {hasPermission('edit_aging_processes') && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => triggerImport(process.id)}
+                        onClick={() => openCopyModal(process.id)}
                       >
-                        <Upload className="h-3 w-3" />
+                        <Copy className="h-3 w-3 mr-1" />
+                        复制
                       </Button>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openCopyModal(process.id)}
-                    >
-                      <Copy className="h-3 w-3 mr-1" />
-                      复制
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteProcess(process.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    )}
+                    {hasPermission('edit_aging_processes') && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteProcess(process.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

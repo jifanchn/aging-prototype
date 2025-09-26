@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Trash2, Save, Download, Upload, Copy } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Textarea } from "@/components/ui/textarea";
+import { usePermissions } from "@/hooks/usePermissions";
 import { 
   Dialog, 
   DialogContent, 
@@ -27,6 +28,7 @@ interface DeviceType {
 }
 
 const DeviceTypeManagement = () => {
+  const { hasPermission } = usePermissions();
   const [deviceTypes, setDeviceTypes] = useState<DeviceType[]>([
     {
       id: 'type1',
@@ -202,42 +204,50 @@ const DeviceTypeManagement = () => {
         <CardHeader>
           <CardTitle>添加设备类型</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="typeName">设备类型名称 *</Label>
-              <Input
-                id="typeName"
-                placeholder="温度传感器"
-                value={newDeviceType.name}
-                onChange={(e) => setNewDeviceType({ ...newDeviceType, name: e.target.value })}
-              />
+        {hasPermission('edit_protocols') ? (
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="typeName">设备类型名称 *</Label>
+                <Input
+                  id="typeName"
+                  placeholder="温度传感器"
+                  value={newDeviceType.name}
+                  onChange={(e) => setNewDeviceType({ ...newDeviceType, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="protocol">通信协议</Label>
+                <Input
+                  id="protocol"
+                  value="Modbus TCP"
+                  readOnly
+                  className="bg-muted cursor-not-allowed"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="description">描述</Label>
+                <Textarea
+                  id="description"
+                  placeholder="设备类型描述"
+                  value={newDeviceType.description}
+                  onChange={(e) => setNewDeviceType({ ...newDeviceType, description: e.target.value })}
+                  className="min-h-[80px]"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="protocol">通信协议</Label>
-              <Input
-                id="protocol"
-                value="Modbus TCP"
-                readOnly
-                className="bg-muted cursor-not-allowed"
-              />
+            <Button onClick={handleAddDeviceType} className="w-full">
+              <Plus className="mr-2 h-4 w-4" />
+              添加设备类型
+            </Button>
+          </CardContent>
+        ) : (
+          <CardContent>
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">您当前的权限只能查看设备类型，无法进行添加操作</p>
             </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="description">描述</Label>
-              <Textarea
-                id="description"
-                placeholder="设备类型描述"
-                value={newDeviceType.description}
-                onChange={(e) => setNewDeviceType({ ...newDeviceType, description: e.target.value })}
-                className="min-h-[80px]"
-              />
-            </div>
-          </div>
-          <Button onClick={handleAddDeviceType} className="w-full">
-            <Plus className="mr-2 h-4 w-4" />
-            添加设备类型
-          </Button>
-        </CardContent>
+          </CardContent>
+        )}
       </Card>
 
       <Card>
@@ -273,27 +283,33 @@ const DeviceTypeManagement = () => {
                       >
                         <Download className="h-3 w-3" />
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => triggerImport(type.id)}
-                      >
-                        <Upload className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openCopyModal(type.id)}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteDeviceType(type.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      {hasPermission('edit_protocols') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => triggerImport(type.id)}
+                        >
+                          <Upload className="h-3 w-3" />
+                        </Button>
+                      )}
+                      {hasPermission('edit_protocols') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openCopyModal(type.id)}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      )}
+                      {hasPermission('edit_protocols') && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteDeviceType(type.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

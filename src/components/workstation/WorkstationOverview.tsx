@@ -14,6 +14,7 @@ import WorkstationCard from "@/components/workstation/WorkstationCard";
 import WorkstationDetailView from "@/components/workstation/WorkstationDetailView";
 import { showSuccess, showError } from "@/utils/toast";
 import CreateWorkstationModal from "@/components/workstation/CreateWorkstationModal";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface Workstation {
   id: number;
@@ -47,6 +48,7 @@ const WorkstationOverview = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedWorkstation, setSelectedWorkstation] = useState<Workstation | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { hasPermission } = usePermissions();
   const [workstations, setWorkstations] = useState<Workstation[]>([
     { 
       id: 1, 
@@ -261,10 +263,12 @@ const WorkstationOverview = () => {
               <Button variant="outline">
                 <Filter className="h-4 w-4" />
               </Button>
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                新建工位
-              </Button>
+              {hasPermission('edit_workstations') && (
+                <Button onClick={() => setIsCreateModalOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  新建工位
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>
