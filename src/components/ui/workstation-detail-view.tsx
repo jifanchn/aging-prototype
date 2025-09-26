@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,14 +46,6 @@ interface Workstation {
 const WorkstationDetailView = ({ workstation, onClose }: { workstation: Workstation; onClose: () => void }) => {
   const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
   const [isRunning, setIsRunning] = useState(workstation.status === 'running');
-
-  // 默认全选所有数值类型的重要参数
-  useEffect(() => {
-    const numericPoints = workstation.importantPoints
-      .filter(point => typeof point.value === 'number')
-      .map(point => point.name);
-    setSelectedPoints(numericPoints);
-  }, [workstation.importantPoints]);
 
   // 生成模拟的历史数据用于图表
   const generateHistoricalData = () => {
@@ -160,13 +152,41 @@ const WorkstationDetailView = ({ workstation, onClose }: { workstation: Workstat
             </CardContent>
           </Card>
 
-          {/* 曲线图表 - 显示在参数选择上方 */}
+          {/* 重要参数选择 */}
           <Card>
             <CardHeader>
-              <CardTitle>重要参数趋势图</CardTitle>
+              <CardTitle>重要参数选择</CardTitle>
             </CardHeader>
             <CardContent>
-              {selectedPoints.length > 0 ? (
+              <div className="space-y-2">
+                {workstation.importantPoints.map((point, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`point-${index}`}
+                      checked={selectedPoints.includes(point.name)}
+                      onCheckedChange={() => togglePointSelection(point.name)}
+                    />
+                    <label htmlFor={`point-${index}`} className="text-sm font-medium">
+                      {point.name} ({point.value}{point.unit})
+                      {typeof point.value === 'number' && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          正常范围: {point.normalRange[0]}-{point.normalRange[1]}{point.unit}
+                        </span>
+                      )}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 曲线图表 */}
+          {selectedPoints.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>重要参数趋势图</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
@@ -198,47 +218,9 @@ const WorkstationDetailView = ({ workstation, onClose }: { workstation: Workstat
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  请选择要显示的重要参数
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* 重要参数选择 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>重要参数选择</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {workstation.importantPoints.map((point, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`point-${index}`}
-                      checked={selectedPoints.includes(point.name)}
-                      onCheckedChange={() => togglePointSelection(point.name)}
-                      disabled={typeof point.value !== 'number'} // 只能选择数值类型参数
-                    />
-                    <label htmlFor={`point-${index}`} className="text-sm font-medium">
-                      {point.name} ({point.value}{point.unit})
-                      {typeof point.value === 'number' && (
-                        <span className="text-xs text-muted-foreground ml-2">
-                          正常范围: {point.normalRange[0]}-{point.normalRange[1]}{point.unit}
-                        </span>
-                      )}
-                      {typeof point.value !== 'number' && (
-                        <span className="text-xs text-muted-foreground ml-2">
-                          (非数值参数，无法显示曲线)
-                        </span>
-                      )}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           {/* 日志 */}
           <Card>

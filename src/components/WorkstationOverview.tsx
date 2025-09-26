@@ -311,7 +311,7 @@ const WorkstationOverview = () => {
   };
 
   return (
-    <div className="p-6">
+    <div>
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -419,7 +419,7 @@ const WorkstationOverview = () => {
                     <Button 
                       size="sm" 
                       variant="outline"
-                      className="bg-black text-white hover:bg-gray-800 hover:text-white flex-1 min-w-0"
+                      className="bg-black text-white hover:bg-gray-800 flex-1 min-w-0"
                     >
                       操作
                       <MoreVertical className="h-3 w-3 ml-1" />
