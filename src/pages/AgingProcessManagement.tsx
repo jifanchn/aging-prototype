@@ -11,9 +11,17 @@ import ProcessConfigurationTab from "@/components/aging-process/ProcessConfigura
 import ProcessRecordingTab from "@/components/aging-process/ProcessRecordingTab";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CreateProcessModal from "@/components/aging-process/CreateProcessModal";
 
 const AgingProcessManagement = () => {
   const [activeTab, setActiveTab] = useState('process-management');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const handleCreateProcess = (process: { name: string; description: string }) => {
+    // This would be handled by the ProcessManagementTab component
+    // For now, we just close the modal
+    console.log('Creating process:', process);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -21,7 +29,7 @@ const AgingProcessManagement = () => {
         <div className="container mx-auto py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">老化流程管理</h1>
-            <Button>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               新建流程
             </Button>
@@ -50,6 +58,12 @@ const AgingProcessManagement = () => {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <CreateProcessModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onProcessCreated={handleCreateProcess}
+      />
       
       <MadeWithDyad />
     </div>
