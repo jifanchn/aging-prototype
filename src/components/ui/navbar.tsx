@@ -1,93 +1,106 @@
 "use client";
 
-import * as React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { 
+  Monitor, 
+  Settings, 
+  Cpu, 
+  BarChart3,
+  Users,
+  Home,
+  ChevronDown
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Navbar = () => {
-  const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
   const location = useLocation();
 
-  const isActive = (href: string) => {
-    if (href === "/") return location.pathname === "/";
-    return location.pathname === href;
+  const navItems = [
+    { name: '仪表板', icon: Home, path: '/' },
+    { name: '工位管理', icon: Monitor, path: '/workstations' },
+    { name: '协议管理', icon: Cpu, path: '/protocols' },
+    { name: '老化流程', icon: Settings, path: '/aging-processes' },
+    { name: '数据分析', icon: BarChart3, path: '/analytics' },
+    { name: '系统管理', icon: Users, path: '/system' },
+  ];
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <div className="mr-4 hidden md:flex">
-          <Link to="/" className="mr-6 flex items-center space-x-2">
-            <span className="font-bold">FlexAge</span>
-          </Link>
-          <nav className="flex items-center space-x-4">
-            <Link 
-              to="/workstations" 
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                isActive("/workstations") ? "text-primary" : "text-muted-foreground"
-              )}
+    <nav className="border-b bg-background">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-8">
+            <Button 
+              variant="ghost" 
+              className="text-xl font-bold"
+              onClick={() => navigate('/')}
             >
-              工位管理
-            </Link>
-            <Link 
-              to="/protocols" 
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                isActive("/protocols") ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              协议通信
-            </Link>
-            <Link 
-              to="/aging-processes" 
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                isActive("/aging-processes") ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              老化流程
-            </Link>
-            <Link 
-              to="/analytics" 
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                isActive("/analytics") ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              数据分析
-            </Link>
-            <Link 
-              to="/system" 
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                isActive("/system") ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              系统管理
-            </Link>
-          </nav>
-        </div>
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <nav className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              {theme === "dark" ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
+              老化管理系统
             </Button>
-          </nav>
+            
+            <div className="hidden md:flex items-center space-x-2">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Button
+                    key={item.name}
+                    variant={isActive(item.path) ? "default" : "ghost"}
+                    className="flex items-center space-x-2"
+                    onClick={() => navigate(item.path)}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{item.name}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="hidden md:block">
+              <div className="flex items-center space-x-2 text-sm">
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                <span>系统运行正常</span>
+              </div>
+            </div>
+            
+            {/* Mobile menu dropdown */}
+            <div className="md:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {navItems.map((item) => (
+                    <DropdownMenuItem 
+                      key={item.name}
+                      onClick={() => navigate(item.path)}
+                      className={isActive(item.path) ? "bg-accent" : ""}
+                    >
+                      <item.icon className="h-4 w-4 mr-2" />
+                      {item.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
         </div>
       </div>
-    </header>
+    </nav>
   );
 };
 
