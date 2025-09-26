@@ -32,7 +32,7 @@ const WorkstationManagement = () => {
       
       <div className="container mx-auto py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList>
+          <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="overview">工位概览</TabsTrigger>
             <TabsTrigger value="device-pairing">工位-设备配对</TabsTrigger>
             <TabsTrigger value="aging-pairing">工位-老化配对</TabsTrigger>
