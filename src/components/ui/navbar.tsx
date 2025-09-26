@@ -67,7 +67,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
             <Link to="/" className="font-bold text-xl">
-              老化测试系统
+              FlexAge
             </Link>
           </div>
 
