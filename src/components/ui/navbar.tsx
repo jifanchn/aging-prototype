@@ -46,7 +46,7 @@ const Navbar = () => {
               className="text-xl font-bold"
               onClick={() => navigate('/')}
             >
-              老化管理系统
+              FlexAge
             </Button>
             
             <div className="hidden md:flex items-center space-x-2">
