@@ -45,7 +45,7 @@ const Login = () => {
               <Lock className="h-6 w-6" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-center">用户登录</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">FlexAge</CardTitle>
           <p className="text-center text-sm text-muted-foreground">
             使用您的账户凭据登录系统
           </p>
