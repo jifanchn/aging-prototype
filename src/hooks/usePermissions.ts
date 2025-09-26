@@ -40,7 +40,7 @@ export const usePermissions = () => {
         return true; // All roles can access these pages
       
       case 'access_system':
-        return role === 'admin'; // Only admin can access system management
+        return false; // Only admin can access system management (handled above)
       
       // Operation permissions
       case 'edit_workstations':
@@ -48,16 +48,16 @@ export const usePermissions = () => {
       case 'edit_aging_processes':
       case 'edit_device_pairing':
       case 'edit_aging_pairing':
-        return role === 'maintainer' || role === 'admin';
+        return role === 'maintainer'; // Only maintainer (admin handled above)
       
       case 'delete_workstations':
-        return role === 'admin' || role === 'maintainer'; // Operator cannot delete
+        return role === 'maintainer'; // Only maintainer can delete (admin handled above)
       
       case 'control_aging_processes':
         return role !== 'viewer'; // Viewer cannot start/stop processes
       
       case 'edit_system_settings':
-        return role === 'admin';
+        return false; // Only admin can edit system settings (handled above)
       
       default:
         return false;
