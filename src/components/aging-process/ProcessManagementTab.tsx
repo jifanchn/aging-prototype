@@ -8,7 +8,10 @@ import { Label } from "@/components/ui/label";
 import { 
   Plus, 
   Trash2,
-  Settings
+  Settings,
+  Download,
+  Upload,
+  Copy
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import CreateProcessModal from "@/components/aging-process/CreateProcessModal";
@@ -59,6 +62,7 @@ const ProcessManagementTab = () => {
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
   const [processDevices, setProcessDevices] = useState<ProcessDevice[]>([]);
   const [newDevice, setNewDevice] = useState({ deviceTypeId: '', alias: '' });
+  const [copyProcessName, setCopyProcessName] = useState('');
 
   const getDeviceTypeName = (id: string) => {
     return deviceTypes.find(dt => dt.id === id)?.name || '未知设备类型';
@@ -139,6 +143,76 @@ const ProcessManagementTab = () => {
     showSuccess('设备移除成功');
   };
 
+  const handleExportProcess = (process: AgingProcess) => {
+    const exportData = {
+      name: process.name,
+      description: process.description,
+      devices: process.devices,
+      createdAt: process.createdAt
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${process.name.replace(/\s+/g, '_')}_config.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showSuccess('配置导出成功');
+  };
+
+  const handleImportProcess = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          const importedProcess = JSON.parse(content);
+          
+          // Validate imported process
+          if (!importedProcess.name || !importedProcess.devices) {
+            throw new Error('Invalid process configuration');
+          }
+          
+          const process: AgingProcess = {
+            id: `proc-${Date.now()}`,
+            name: importedProcess.name,
+            description: importedProcess.description || '',
+            devices: importedProcess.devices,
+            createdAt: new Date().toISOString().split('T')[0]
+          };
+          
+          setProcesses([...processes, process]);
+          showSuccess('配置导入成功');
+        } catch (error) {
+          showError('导入文件格式错误');
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleCopyProcess = (process: AgingProcess) => {
+    if (!copyProcessName.trim()) {
+      showError('请输入新流程名称');
+      return;
+    }
+    
+    const newProcess: AgingProcess = {
+      id: `proc-${Date.now()}`,
+      name: copyProcessName,
+      description: process.description,
+      devices: process.devices, // DEV和别名保持不变
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    
+    setProcesses([...processes, newProcess]);
+    setCopyProcessName('');
+    showSuccess('配置复制成功');
+  };
+
   return (
     <div className="space-y-6">
       {/* Process list */}
@@ -169,15 +243,53 @@ const ProcessManagementTab = () => {
                       创建时间: {process.createdAt}
                     </div>
                   </div>
-                  <div className="flex space-x-2 ml-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSelectProcess(process)}
-                    >
-                      <Settings className="h-3 w-3 mr-1" />
-                      配置
-                    </Button>
+                  <div className="flex flex-col space-y-2 ml-4">
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSelectProcess(process)}
+                      >
+                        <Settings className="h-3 w-3 mr-1" />
+                        配置
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExportProcess(process)}
+                      >
+                        <Download className="h-3 w-3" />
+                      </Button>
+                      <label className="cursor-pointer">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Upload className="h-3 w-3" />
+                        </Button>
+                        <input
+                          type="file"
+                          accept=".json"
+                          onChange={handleImportProcess}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    <div className="flex space-x-2 mt-1">
+                      <Input
+                        placeholder="复制名称"
+                        value={copyProcessName}
+                        onChange={(e) => setCopyProcessName(e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopyProcess(process)}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
                     <Button
                       variant="outline"
                       size="sm"
