@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,14 @@ import {
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import CreateProcessModal from "@/components/aging-process/CreateProcessModal";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
 
 interface DeviceType {
   id: string;
@@ -62,6 +70,14 @@ const ProcessManagementTab = () => {
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
   const [processDevices, setProcessDevices] = useState<ProcessDevice[]>([]);
   const [newDevice, setNewDevice] = useState({ deviceTypeId: '', alias: '' });
+  
+  // Import functionality
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importProcessId, setImportProcessId] = useState<string | null>(null);
+  
+  // Copy functionality
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  const [copyProcessId, setCopyProcessId] = useState<string | null>(null);
   const [copyProcessName, setCopyProcessName] = useState('');
 
   const getDeviceTypeName = (id: string) => {
@@ -192,29 +208,63 @@ const ProcessManagementTab = () => {
       };
       reader.readAsText(file);
     }
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
-  const handleCopyProcess = (process: AgingProcess) => {
+  const triggerImport = (processId: string) => {
+    setImportProcessId(processId);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleCopyProcess = () => {
     if (!copyProcessName.trim()) {
       showError('请输入新流程名称');
+      return;
+    }
+    
+    const originalProcess = processes.find(p => p.id === copyProcessId);
+    if (!originalProcess) {
+      showError('原流程不存在');
       return;
     }
     
     const newProcess: AgingProcess = {
       id: `proc-${Date.now()}`,
       name: copyProcessName,
-      description: process.description,
-      devices: process.devices, // DEV和别名保持不变
+      description: originalProcess.description,
+      devices: originalProcess.devices, // DEV和别名保持不变
       createdAt: new Date().toISOString().split('T')[0]
     };
     
     setProcesses([...processes, newProcess]);
     setCopyProcessName('');
+    setIsCopyModalOpen(false);
+    setCopyProcessId(null);
     showSuccess('配置复制成功');
+  };
+
+  const openCopyModal = (processId: string) => {
+    setCopyProcessId(processId);
+    setCopyProcessName('');
+    setIsCopyModalOpen(true);
   };
 
   return (
     <div className="space-y-6">
+      {/* Hidden file input for import */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".json"
+        onChange={handleImportProcess}
+        className="hidden"
+      />
+      
       {/* Process list */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -260,36 +310,22 @@ const ProcessManagementTab = () => {
                       >
                         <Download className="h-3 w-3" />
                       </Button>
-                      <label className="cursor-pointer">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                        >
-                          <Upload className="h-3 w-3" />
-                        </Button>
-                        <input
-                          type="file"
-                          accept=".json"
-                          onChange={handleImportProcess}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-                    <div className="flex space-x-2 mt-1">
-                      <Input
-                        placeholder="复制名称"
-                        value={copyProcessName}
-                        onChange={(e) => setCopyProcessName(e.target.value)}
-                        className="h-8 text-xs"
-                      />
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleCopyProcess(process)}
+                        onClick={() => triggerImport(process.id)}
                       >
-                        <Copy className="h-3 w-3" />
+                        <Upload className="h-3 w-3" />
                       </Button>
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openCopyModal(process.id)}
+                    >
+                      <Copy className="h-3 w-3 mr-1" />
+                      复制
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -387,6 +423,39 @@ const ProcessManagementTab = () => {
         onClose={() => setIsCreateModalOpen(false)}
         onProcessCreated={handleAddProcess}
       />
+      
+      {/* Copy Process Modal */}
+      <Dialog open={isCopyModalOpen} onOpenChange={setIsCopyModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>复制老化流程</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="copyProcessName">新流程名称 *</Label>
+              <Input
+                id="copyProcessName"
+                placeholder="输入新流程名称"
+                value={copyProcessName}
+                onChange={(e) => setCopyProcessName(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              复制后的流程将保持原有的设备配置（DEV和别名不变）
+            </p>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">取消</Button>
+            </DialogClose>
+            <Button onClick={handleCopyProcess}>
+              <Copy className="mr-2 h-4 w-4" />
+              复制流程
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
