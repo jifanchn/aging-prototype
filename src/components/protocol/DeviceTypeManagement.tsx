@@ -1,14 +1,22 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, Download, Upload, Copy } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { Textarea } from "@/components/ui/textarea";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
 
 interface DeviceType {
   id: string;
@@ -38,9 +46,18 @@ const DeviceTypeManagement = () => {
 
   const [newDeviceType, setNewDeviceType] = useState<Omit<DeviceType, 'id' | 'createdAt'>>({
     name: '',
-    protocol: 'modbus-tcp', // 默认且唯一选项
+    protocol: 'modbus-tcp',
     description: ''
   });
+
+  // Import functionality
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importDeviceTypeId, setImportDeviceTypeId] = useState<string | null>(null);
+  
+  // Copy functionality
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  const [copyDeviceTypeId, setCopyDeviceTypeId] = useState<string | null>(null);
+  const [copyDeviceTypeName, setCopyDeviceTypeName] = useState('');
 
   const handleAddDeviceType = () => {
     if (!newDeviceType.name) {
@@ -75,8 +92,112 @@ const DeviceTypeManagement = () => {
     showSuccess('设备类型删除成功');
   };
 
+  const handleExportDeviceType = (deviceType: DeviceType) => {
+    const exportData = {
+      name: deviceType.name,
+      protocol: deviceType.protocol,
+      description: deviceType.description,
+      createdAt: deviceType.createdAt
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${deviceType.name.replace(/\s+/g, '_')}_config.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showSuccess('设备类型配置导出成功');
+  };
+
+  const handleImportDeviceType = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          const importedDeviceType = JSON.parse(content);
+          
+          // Validate imported device type
+          if (!importedDeviceType.name || !importedDeviceType.protocol) {
+            throw new Error('Invalid device type configuration');
+          }
+          
+          const deviceType: DeviceType = {
+            id: `type-${Date.now()}`,
+            name: importedDeviceType.name,
+            protocol: importedDeviceType.protocol,
+            description: importedDeviceType.description || '',
+            createdAt: new Date().toISOString().split('T')[0]
+          };
+          
+          setDeviceTypes([...deviceTypes, deviceType]);
+          showSuccess('设备类型配置导入成功');
+        } catch (error) {
+          showError('导入文件格式错误');
+        }
+      };
+      reader.readAsText(file);
+    }
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const triggerImport = (deviceTypeId: string) => {
+    setImportDeviceTypeId(deviceTypeId);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleCopyDeviceType = () => {
+    if (!copyDeviceTypeName.trim()) {
+      showError('请输入新设备类型名称');
+      return;
+    }
+    
+    const originalDeviceType = deviceTypes.find(dt => dt.id === copyDeviceTypeId);
+    if (!originalDeviceType) {
+      showError('原设备类型不存在');
+      return;
+    }
+    
+    const newDeviceType: DeviceType = {
+      id: `type-${Date.now()}`,
+      name: copyDeviceTypeName,
+      protocol: originalDeviceType.protocol,
+      description: originalDeviceType.description,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    
+    setDeviceTypes([...deviceTypes, newDeviceType]);
+    setCopyDeviceTypeName('');
+    setIsCopyModalOpen(false);
+    setCopyDeviceTypeId(null);
+    showSuccess('设备类型配置复制成功');
+  };
+
+  const openCopyModal = (deviceTypeId: string) => {
+    setCopyDeviceTypeId(deviceTypeId);
+    setCopyDeviceTypeName('');
+    setIsCopyModalOpen(true);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Hidden file input for import */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".json"
+        onChange={handleImportDeviceType}
+        className="hidden"
+      />
+      
       <Card>
         <CardHeader>
           <CardTitle>添加设备类型</CardTitle>
@@ -144,13 +265,36 @@ const DeviceTypeManagement = () => {
                   </TableCell>
                   <TableCell>{type.createdAt}</TableCell>
                   <TableCell>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteDeviceType(type.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex space-x-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExportDeviceType(type)}
+                      >
+                        <Download className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => triggerImport(type.id)}
+                      >
+                        <Upload className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openCopyModal(type.id)}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteDeviceType(type.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -158,6 +302,39 @@ const DeviceTypeManagement = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Copy Device Type Modal */}
+      <Dialog open={isCopyModalOpen} onOpenChange={setIsCopyModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>复制设备类型</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="copyDeviceTypeName">新设备类型名称 *</Label>
+              <Input
+                id="copyDeviceTypeName"
+                placeholder="输入新设备类型名称"
+                value={copyDeviceTypeName}
+                onChange={(e) => setCopyDeviceTypeName(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              复制后的设备类型将保持原有的协议和描述配置
+            </p>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">取消</Button>
+            </DialogClose>
+            <Button onClick={handleCopyDeviceType}>
+              <Copy className="mr-2 h-4 w-4" />
+              复制设备类型
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
