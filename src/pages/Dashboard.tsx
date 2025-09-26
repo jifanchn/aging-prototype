@@ -18,9 +18,14 @@ interface Workstation {
   id: number;
   name: string;
   status: 'running' | 'passed' | 'failed' | 'stopped' | 'paused';
-  devices: number;
-  availableProcesses: number;
-  onlineDevices: number;
+  onlineDevices: Array<{
+    ip: string;
+    name: string;
+    deviceType: string;
+    port: number;
+    protocol: string;
+  }>;
+  currentAgingProcess?: string;
   logs: Array<{
     timestamp: number;
     content: string;
@@ -28,7 +33,6 @@ interface Workstation {
   temperature: number;
   voltage: number;
   uptime: string;
-  currentAgingProcess?: string;
   importantPoints: Array<{
     name: string;
     value: number | boolean;
@@ -43,9 +47,11 @@ const mockWorkstations: Workstation[] = [
     id: 1, 
     name: "工位 A1", 
     status: "running", 
-    devices: 2,
-    availableProcesses: 2,
-    onlineDevices: 2,
+    onlineDevices: [
+      { ip: "192.168.1.101", name: "温度传感器 A1", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" },
+      { ip: "192.168.1.102", name: "电压监测器 B2", deviceType: "电压监测器", port: 502, protocol: "modbus-tcp" }
+    ],
+    currentAgingProcess: "高温老化流程 A",
     logs: [
       { timestamp: 0, content: "工位启动成功" },
       { timestamp: 15, content: "设备连接正常" },
@@ -56,7 +62,6 @@ const mockWorkstations: Workstation[] = [
     temperature: 65.5,
     voltage: 220,
     uptime: "2h 15m",
-    currentAgingProcess: "高温老化流程 A",
     importantPoints: [
       { name: "温度", value: 65.5, unit: "°C", normalRange: [60, 75] },
       { name: "电压", value: 220, unit: "V", normalRange: [210, 230] },
@@ -68,9 +73,12 @@ const mockWorkstations: Workstation[] = [
     id: 2, 
     name: "工位 B2", 
     status: "passed", 
-    devices: 2,
-    availableProcesses: 1,
-    onlineDevices: 2,
+    onlineDevices: [
+      { ip: "192.168.1.103", name: "温度传感器 C3", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" },
+      { ip: "192.168.1.104", name: "电压监测器 D4", deviceType: "电压监测器", port: 502, protocol: "modbus-tcp" },
+      { ip: "192.168.1.105", name: "湿度传感器 E5", deviceType: "湿度传感器", port: 502, protocol: "modbus-tcp" }
+    ],
+    currentAgingProcess: "标准老化流程 B",
     logs: [
       { timestamp: 0, content: "工位启动成功" },
       { timestamp: 20, content: "所有设备在线" },
@@ -81,7 +89,6 @@ const mockWorkstations: Workstation[] = [
     temperature: 70.2,
     voltage: 219,
     uptime: "4h 30m",
-    currentAgingProcess: "标准老化流程 B",
     importantPoints: [
       { name: "温度", value: 70.2, unit: "°C", normalRange: [60, 75] },
       { name: "电压", value: 219, unit: "V", normalRange: [210, 230] },
@@ -93,9 +100,8 @@ const mockWorkstations: Workstation[] = [
     id: 3, 
     name: "工位 C3", 
     status: "failed", 
-    devices: 1,
-    availableProcesses: 0,
-    onlineDevices: 0,
+    onlineDevices: [],
+    currentAgingProcess: "快速老化流程 C",
     logs: [
       { timestamp: 0, content: "工位启动成功" },
       { timestamp: 10, content: "检测到设备离线" },
@@ -106,7 +112,6 @@ const mockWorkstations: Workstation[] = [
     temperature: 58.1,
     voltage: 210,
     uptime: "1h 20m",
-    currentAgingProcess: "快速老化流程 C",
     importantPoints: [
       { name: "温度", value: 58.1, unit: "°C", normalRange: [60, 75] },
       { name: "电压", value: 210, unit: "V", normalRange: [210, 230] },
@@ -118,9 +123,10 @@ const mockWorkstations: Workstation[] = [
     id: 4, 
     name: "工位 D4", 
     status: "stopped", 
-    devices: 3,
-    availableProcesses: 1,
-    onlineDevices: 2,
+    onlineDevices: [
+      { ip: "192.168.1.106", name: "温度传感器 F6", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" }
+    ],
+    currentAgingProcess: undefined,
     logs: [
       { timestamp: 0, content: "工位初始化完成" },
       { timestamp: 5, content: "部分设备离线" },
@@ -130,7 +136,6 @@ const mockWorkstations: Workstation[] = [
     temperature: 25.0,
     voltage: 220,
     uptime: "0h 0m",
-    currentAgingProcess: undefined,
     importantPoints: [
       { name: "温度", value: 25.0, unit: "°C", normalRange: [60, 75] },
       { name: "电压", value: 220, unit: "V", normalRange: [210, 230] },
@@ -255,10 +260,10 @@ const Dashboard = () => {
                     </div>
                     <div className="flex space-x-2">
                       <Badge variant="secondary">
-                        {workstation.onlineDevices}/{workstation.devices} 设备在线
+                        {workstation.onlineDevices.length} 设备在线
                       </Badge>
                       <Badge variant="outline">
-                        {workstation.availableProcesses} 流程可用
+                        {workstation.currentAgingProcess ? '1' : '0'} 流程可用
                       </Badge>
                     </div>
                   </div>
