@@ -16,7 +16,7 @@ interface RegisterMapping {
   id: string;
   name: string;
   address: number;
-  dataType: 'int16' | 'uint16' | 'int32' | 'uint32' | 'float32' | 'bool';
+  dataType: 'INT16' | 'UINT16' | 'INT32' | 'UINT32' | 'ASCII16' | 'ASCII8' | 'BOOL';
   description: string;
   unit: string;
   normalRangeMin: number;
@@ -24,6 +24,8 @@ interface RegisterMapping {
   isImportant: boolean;
   scale: number;
   offset: number;
+  slaveAddress: number;
+  reverseEndianness: boolean;
 }
 
 interface DeviceRegisterTable {
@@ -52,27 +54,31 @@ const DeviceRegisterTable = () => {
           id: '1',
           name: '温度',
           address: 40001,
-          dataType: 'float32',
+          dataType: 'UINT16',
           description: '当前温度值',
           unit: '°C',
           normalRangeMin: 0,
           normalRangeMax: 100,
           isImportant: true,
           scale: 0.1,
-          offset: 0
+          offset: 0,
+          slaveAddress: 1,
+          reverseEndianness: false
         },
         {
           id: '2',
           name: '湿度',
           address: 40003,
-          dataType: 'float32',
+          dataType: 'UINT16',
           description: '当前湿度值',
           unit: '%',
           normalRangeMin: 0,
           normalRangeMax: 100,
           isImportant: false,
           scale: 0.1,
-          offset: 0
+          offset: 0,
+          slaveAddress: 1,
+          reverseEndianness: false
         }
       ]
     },
@@ -86,27 +92,31 @@ const DeviceRegisterTable = () => {
           id: '3',
           name: '电压',
           address: 40001,
-          dataType: 'float32',
+          dataType: 'UINT16',
           description: '当前电压值',
           unit: 'V',
           normalRangeMin: 210,
           normalRangeMax: 230,
           isImportant: true,
           scale: 0.1,
-          offset: 0
+          offset: 0,
+          slaveAddress: 1,
+          reverseEndianness: false
         },
         {
           id: '4',
           name: '电流',
           address: 40003,
-          dataType: 'float32',
+          dataType: 'UINT16',
           description: '当前电流值',
           unit: 'A',
           normalRangeMin: 0,
           normalRangeMax: 10,
           isImportant: true,
           scale: 0.01,
-          offset: 0
+          offset: 0,
+          slaveAddress: 1,
+          reverseEndianness: false
         }
       ]
     }
@@ -123,14 +133,16 @@ const DeviceRegisterTable = () => {
   const [newMapping, setNewMapping] = useState<Omit<RegisterMapping, 'id'>>({
     name: '',
     address: 40001,
-    dataType: 'float32',
+    dataType: 'UINT16',
     description: '',
     unit: '',
     normalRangeMin: 0,
     normalRangeMax: 100,
     isImportant: false,
     scale: 1.0,
-    offset: 0
+    offset: 0,
+    slaveAddress: 1,
+    reverseEndianness: false
   });
 
   const activeTable = tables.find(table => table.deviceTypeId === activeDeviceTypeId);
@@ -157,14 +169,16 @@ const DeviceRegisterTable = () => {
     setNewMapping({
       name: '',
       address: 40001,
-      dataType: 'float32',
+      dataType: 'UINT16',
       description: '',
       unit: '',
       normalRangeMin: 0,
       normalRangeMax: 100,
       isImportant: false,
       scale: 1.0,
-      offset: 0
+      offset: 0,
+      slaveAddress: 1,
+      reverseEndianness: false
     });
 
     showSuccess('寄存器映射添加成功');
@@ -339,12 +353,13 @@ const DeviceRegisterTable = () => {
                       <SelectValue placeholder="选择数据类型" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="int16">INT16</SelectItem>
-                      <SelectItem value="uint16">UINT16</SelectItem>
-                      <SelectItem value="int32">INT32</SelectItem>
-                      <SelectItem value="uint32">UINT32</SelectItem>
-                      <SelectItem value="float32">FLOAT32</SelectItem>
-                      <SelectItem value="bool">BOOL</SelectItem>
+                      <SelectItem value="UINT16">UINT16</SelectItem>
+                      <SelectItem value="INT16">INT16</SelectItem>
+                      <SelectItem value="UINT32">UINT32</SelectItem>
+                      <SelectItem value="INT32">INT32</SelectItem>
+                      <SelectItem value="ASCII16">ASCII16</SelectItem>
+                      <SelectItem value="ASCII8">ASCII8</SelectItem>
+                      <SelectItem value="BOOL">BOOL</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -386,17 +401,39 @@ const DeviceRegisterTable = () => {
                     onChange={(e) => setNewMapping({ ...newMapping, normalRangeMax: parseFloat(e.target.value) || 100 })}
                   />
                 </div>
-                <div className="space-y-2 flex items-end">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="isImportant"
-                      checked={newMapping.isImportant}
-                      onChange={(e) => setNewMapping({ ...newMapping, isImportant: e.target.checked })}
-                      className="w-4 h-4"
-                    />
-                    <Label htmlFor="isImportant">重要参数</Label>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="slaveAddress">从机地址</Label>
+                  <Input
+                    id="slaveAddress"
+                    type="number"
+                    value={newMapping.slaveAddress}
+                    onChange={(e) => setNewMapping({ ...newMapping, slaveAddress: parseInt(e.target.value) || 1 })}
+                    min="1"
+                    max="247"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-6 mb-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isImportant"
+                    checked={newMapping.isImportant}
+                    onChange={(e) => setNewMapping({ ...newMapping, isImportant: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="isImportant">重要参数</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="reverseEndianness"
+                    checked={newMapping.reverseEndianness}
+                    onChange={(e) => setNewMapping({ ...newMapping, reverseEndianness: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="reverseEndianness">大小端反转</Label>
                 </div>
               </div>
 
@@ -466,10 +503,12 @@ const DeviceRegisterTable = () => {
                 <TableRow>
                   <TableHead>名称</TableHead>
                   <TableHead>地址</TableHead>
+                  <TableHead>从机地址</TableHead>
                   <TableHead>数据类型</TableHead>
                   <TableHead>单位</TableHead>
                   <TableHead>变换</TableHead>
                   <TableHead>重要参数</TableHead>
+                  <TableHead>大小端反转</TableHead>
                   <TableHead>操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -478,13 +517,17 @@ const DeviceRegisterTable = () => {
                   <TableRow key={mapping.id}>
                     <TableCell className="font-medium">{mapping.name}</TableCell>
                     <TableCell>{mapping.address}</TableCell>
-                    <TableCell>{mapping.dataType.toUpperCase()}</TableCell>
+                    <TableCell>{mapping.slaveAddress}</TableCell>
+                    <TableCell>{mapping.dataType}</TableCell>
                     <TableCell>{mapping.unit}</TableCell>
                     <TableCell className="text-xs">
                       y = {mapping.scale}x + {mapping.offset}
                     </TableCell>
                     <TableCell>
                       {mapping.isImportant ? '是' : '否'}
+                    </TableCell>
+                    <TableCell>
+                      {mapping.reverseEndianness ? '是' : '否'}
                     </TableCell>
                     <TableCell>
                       <Button
