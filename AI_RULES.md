@@ -5,7 +5,8 @@
 - Use React Router. KEEP the routes in src/App.tsx
 - Always put source code in the src folder.
 - Put pages into src/pages/
-- Put components into src/components/
+- Put common components into src/components/
+- Put every single page componets in src/components/{{page}}/{{component}}.tsx
 - The main page (default page) is src/pages/Index.tsx
 - UPDATE the main page to include the new components. OTHERWISE, the user can NOT see any components!
 - ALWAYS try to use the shadcn/ui library.
