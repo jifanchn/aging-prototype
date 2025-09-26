@@ -21,14 +21,108 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { showSuccess, showError } from "@/utils/toast";
+import AnalyticsDetailView from "@/components/analytics/AnalyticsDetailView";
 
 // Mock data for aging logs
 const mockAgingLogs = [
-  { id: '1', sn: 'SN123456789', startTime: '2025-08-10T08:00:00', endTime: '2025-08-10T12:00:00', status: 'completed', workstation: '工位 A1' },
-  { id: '2', sn: 'SN123456790', startTime: '2025-08-10T09:00:00', endTime: '2025-08-10T13:30:00', status: 'failed', workstation: '工位 B2' },
-  { id: '3', sn: 'SN123456791', startTime: '2025-08-11T10:00:00', endTime: null, status: 'running', workstation: '工位 C3' },
-  { id: '4', sn: 'SN987654321', startTime: '2025-08-11T11:00:00', endTime: '2025-08-11T15:00:00', status: 'completed', workstation: '工位 D4' },
-  { id: '5', sn: 'SN987654322', startTime: '2025-08-12T08:30:00', endTime: null, status: 'running', workstation: '工位 A1' },
+  { 
+    id: '1', 
+    sn: 'SN123456789', 
+    startTime: '2025-08-10T08:00:00', 
+    endTime: '2025-08-10T12:00:00', 
+    status: 'completed', 
+    workstation: '工位 A1',
+    importantPoints: [
+      { name: 'temperature', value: 65.5, unit: '°C', normalRange: [60, 75] },
+      { name: 'voltage', value: 220, unit: 'V', normalRange: [210, 230] },
+      { name: 'current', value: 2.3, unit: 'A', normalRange: [2, 3] }
+    ],
+    allAvailablePoints: [
+      { name: 'temperature', unit: '°C' },
+      { name: 'voltage', unit: 'V' },
+      { name: 'current', unit: 'A' },
+      { name: 'humidity', unit: '%' },
+      { name: 'power', unit: 'W' },
+      { name: 'pressure', unit: 'bar' },
+      { name: 'custom_temp', unit: '°C' },
+      { name: 'custom_volt', unit: 'V' }
+    ]
+  },
+  { 
+    id: '2', 
+    sn: 'SN123456790', 
+    startTime: '2025-08-10T09:00:00', 
+    endTime: '2025-08-10T13:30:00', 
+    status: 'failed', 
+    workstation: '工位 B2',
+    importantPoints: [
+      { name: 'temperature', value: 85.2, unit: '°C', normalRange: [60, 75] },
+      { name: 'voltage', value: 215, unit: 'V', normalRange: [210, 230] }
+    ],
+    allAvailablePoints: [
+      { name: 'temperature', unit: '°C' },
+      { name: 'voltage', unit: 'V' },
+      { name: 'current', unit: 'A' },
+      { name: 'humidity', unit: '%' },
+      { name: 'power', unit: 'W' }
+    ]
+  },
+  { 
+    id: '3', 
+    sn: 'SN123456791', 
+    startTime: '2025-08-11T10:00:00', 
+    endTime: null, 
+    status: 'running', 
+    workstation: '工位 C3',
+    importantPoints: [
+      { name: 'temperature', value: 58.1, unit: '°C', normalRange: [60, 75] },
+      { name: 'voltage', value: 210, unit: 'V', normalRange: [210, 230] },
+      { name: 'pressure', value: 1.2, unit: 'bar', normalRange: [1, 2] }
+    ],
+    allAvailablePoints: [
+      { name: 'temperature', unit: '°C' },
+      { name: 'voltage', unit: 'V' },
+      { name: 'pressure', unit: 'bar' },
+      { name: 'custom_temp', unit: '°C' }
+    ]
+  },
+  { 
+    id: '4', 
+    sn: 'SN987654321', 
+    startTime: '2025-08-11T11:00:00', 
+    endTime: '2025-08-11T15:00:00', 
+    status: 'completed', 
+    workstation: '工位 D4',
+    importantPoints: [
+      { name: 'temperature', value: 70.2, unit: '°C', normalRange: [60, 75] },
+      { name: 'voltage', value: 219, unit: 'V', normalRange: [210, 230] },
+      { name: 'humidity', value: 45, unit: '%', normalRange: [30, 60] }
+    ],
+    allAvailablePoints: [
+      { name: 'temperature', unit: '°C' },
+      { name: 'voltage', unit: 'V' },
+      { name: 'humidity', unit: '%' },
+      { name: 'power', unit: 'W' }
+    ]
+  },
+  { 
+    id: '5', 
+    sn: 'SN987654322', 
+    startTime: '2025-08-12T08:30:00', 
+    endTime: null, 
+    status: 'running', 
+    workstation: '工位 A1',
+    importantPoints: [
+      { name: 'temperature', value: 45.0, unit: '°C', normalRange: [60, 75] },
+      { name: 'voltage', value: 220, unit: 'V', normalRange: [210, 230] }
+    ],
+    allAvailablePoints: [
+      { name: 'temperature', unit: '°C' },
+      { name: 'voltage', unit: 'V' },
+      { name: 'current', unit: 'A' },
+      { name: 'custom_volt', unit: 'V' }
+    ]
+  },
 ];
 
 const Analytics = () => {
@@ -64,6 +158,14 @@ const Analytics = () => {
     }
   };
 
+  const handleViewDetails = (log: any) => {
+    setSelectedLog(log);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedLog(null);
+  };
+
   const handleDownload = (log: any) => {
     // Set default time range based on log data
     const defaultStartTime = log.startTime ? format(new Date(log.startTime), 'yyyy-MM-dd HH:mm') : '';
@@ -71,11 +173,10 @@ const Analytics = () => {
     
     setStartTime(defaultStartTime);
     setEndTime(defaultEndTime);
-    setSelectedLog(log);
     
     // In a real implementation, this would download the actual log file
     // For now, we'll create a mock CSV file
-    const csvContent = `SN,${log.sn}\n工位,${log.workstation}\n状态,${log.status}\n开始时间,${defaultStartTime}\n结束时间,${defaultEndTime}\n\n时间,温度(°C),电压(V),电流(A),状态\n2025-08-10 08:00:00,25.0,220.0,0.0,启动\n2025-08-10 08:05:00,35.2,220.1,1.2,升温\n2025-08-10 08:10:00,45.8,219.9,1.8,升温\n2025-08-10 08:15:00,55.3,220.0,2.1,升温\n2025-08-10 08:20:00,65.0,220.1,2.3,恒温`;
+    const csvContent = `SN,${log.sn}\n工位,${log.workstation}\n状态,${log.status === 'completed' ? '成功' : log.status === 'failed' ? '失败' : '运行中'}\n开始时间,${defaultStartTime}\n结束时间,${defaultEndTime}\n\n时间,温度(°C),电压(V),电流(A),状态\n2025-08-10 08:00:00,25.0,220.0,0.0,启动\n2025-08-10 08:05:00,35.2,220.1,1.2,升温\n2025-08-10 08:10:00,45.8,219.9,1.8,升温\n2025-08-10 08:15:00,55.3,220.0,2.1,升温\n2025-08-10 08:20:00,65.0,220.1,2.3,恒温`;
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -166,7 +267,8 @@ const Analytics = () => {
                     {searchResults.map((log) => (
                       <div 
                         key={log.id}
-                        className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-muted/50"
+                        className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-muted/50 cursor-pointer"
+                        onClick={() => handleViewDetails(log)}
                       >
                         <div>
                           <div className="font-medium">{log.sn}</div>
@@ -190,7 +292,10 @@ const Analytics = () => {
                           )}
                           <Button 
                             size="sm" 
-                            onClick={() => handleDownload(log)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownload(log);
+                            }}
                           >
                             <Download className="h-3 w-3 mr-1" />
                             下载
@@ -205,6 +310,13 @@ const Analytics = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {selectedLog && (
+        <AnalyticsDetailView 
+          log={selectedLog} 
+          onClose={handleCloseDetails} 
+        />
+      )}
       
       <MadeWithDyad />
     </div>
