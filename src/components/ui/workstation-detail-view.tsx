@@ -19,6 +19,9 @@ interface Workstation {
   onlineDevices: Array<{
     ip: string;
     name: string;
+    deviceType: string;
+    port: number;
+    protocol: string;
   }>;
   currentAgingProcess?: string;
   logs: Array<{
@@ -94,8 +97,14 @@ const WorkstationDetailView = ({ workstation, onClose }: { workstation: Workstat
                 <div className="space-y-2">
                   {workstation.onlineDevices.map((device, index) => (
                     <div key={index} className="flex items-center justify-between p-2 bg-muted/30 rounded">
-                      <div className="font-medium">{device.name}</div>
-                      <div className="text-sm text-muted-foreground">{device.ip}</div>
+                      <div>
+                        <div className="font-medium">{device.name}</div>
+                        <div className="text-xs text-muted-foreground">{device.deviceType}</div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {device.ip}:{device.port}<br/>
+                        {device.protocol}
+                      </div>
                     </div>
                   ))}
                 </div>

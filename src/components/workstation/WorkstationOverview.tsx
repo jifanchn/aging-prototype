@@ -21,6 +21,9 @@ interface Workstation {
   onlineDevices: Array<{
     ip: string;
     name: string;
+    deviceType: string;
+    port: number;
+    protocol: string;
   }>;
   logs: Array<{
     timestamp: number;
@@ -48,8 +51,8 @@ const WorkstationOverview = () => {
       name: "工位 A1", 
       status: "running", 
       onlineDevices: [
-        { ip: "192.168.1.101", name: "温度传感器 A1" },
-        { ip: "192.168.1.102", name: "电压监测器 B2" }
+        { ip: "192.168.1.101", name: "温度传感器 A1", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" },
+        { ip: "192.168.1.102", name: "电压监测器 B2", deviceType: "电压监测器", port: 502, protocol: "modbus-tcp" }
       ],
       logs: [
         { timestamp: 0, content: "工位启动成功" },
@@ -73,9 +76,9 @@ const WorkstationOverview = () => {
       name: "工位 B2", 
       status: "passed", 
       onlineDevices: [
-        { ip: "192.168.1.103", name: "温度传感器 C3" },
-        { ip: "192.168.1.104", name: "电压监测器 D4" },
-        { ip: "192.168.1.105", name: "湿度传感器 E5" }
+        { ip: "192.168.1.103", name: "温度传感器 C3", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" },
+        { ip: "192.168.1.104", name: "电压监测器 D4", deviceType: "电压监测器", port: 502, protocol: "modbus-tcp" },
+        { ip: "192.168.1.105", name: "湿度传感器 E5", deviceType: "湿度传感器", port: 502, protocol: "modbus-tcp" }
       ],
       logs: [
         { timestamp: 0, content: "工位启动成功" },
@@ -121,7 +124,7 @@ const WorkstationOverview = () => {
       name: "工位 D4", 
       status: "stopped", 
       onlineDevices: [
-        { ip: "192.168.1.106", name: "温度传感器 F6" }
+        { ip: "192.168.1.106", name: "温度传感器 F6", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" }
       ],
       logs: [
         { timestamp: 0, content: "工位初始化完成" },
@@ -144,8 +147,8 @@ const WorkstationOverview = () => {
       name: "工位 E5", 
       status: "running", 
       onlineDevices: [
-        { ip: "192.168.1.107", name: "温度传感器 G7" },
-        { ip: "192.168.1.108", name: "功率计 H8" }
+        { ip: "192.168.1.107", name: "温度传感器 G7", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" },
+        { ip: "192.168.1.108", name: "功率计 H8", deviceType: "功率计", port: 502, protocol: "modbus-tcp" }
       ],
       logs: [
         { timestamp: 0, content: "工位启动成功" },
@@ -169,7 +172,7 @@ const WorkstationOverview = () => {
       name: "工位 F6", 
       status: "stopped", 
       onlineDevices: [
-        { ip: "192.168.1.109", name: "温度传感器 I9" }
+        { ip: "192.168.1.109", name: "温度传感器 I9", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" }
       ],
       logs: [
         { timestamp: 0, content: "工位初始化完成" },

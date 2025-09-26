@@ -18,6 +18,9 @@ interface WorkstationCardProps {
   onlineDevices: Array<{
     ip: string;
     name: string;
+    deviceType: string;
+    port: number;
+    protocol: string;
   }>;
   currentAgingProcess?: string;
   logs: Array<{
@@ -37,6 +40,14 @@ const getStatusIcon = (status: string) => {
     case 'paused': return <PauseCircle className="h-4 w-4 text-yellow-500" />;
     default: return <PauseCircle className="h-4 w-4 text-gray-500" />;
   }
+};
+
+// 限制显示的设备数量，超出部分用...表示
+const getLimitedDeviceTypes = (devices: WorkstationCardProps['onlineDevices'], limit = 3) => {
+  if (devices.length <= limit) {
+    return devices.map(device => device.deviceType);
+  }
+  return [...devices.slice(0, limit).map(device => device.deviceType), '...'];
 };
 
 const WorkstationCard = ({ 
@@ -66,18 +77,22 @@ const WorkstationCard = ({
           </div>
         )}
         
-        {/* 在线设备信息 */}
+        {/* 在线设备信息 - 显示设备类型，悬浮显示详细信息 */}
         <div className="space-y-1">
-          <div className="text-sm text-muted-foreground">在线设备 ({onlineDevices.length}):</div>
+          <div className="text-sm text-muted-foreground">在线设备:</div>
           {onlineDevices.length > 0 ? (
-            <div className="flex flex-wrap gap-1">
-              {onlineDevices.map((device, index) => (
+            <div 
+              className="flex flex-wrap gap-1 max-h-12 overflow-hidden"
+              title={onlineDevices.map(device => 
+                `${device.deviceType} (${device.ip}:${device.port}, ${device.protocol})`
+              ).join('\n')}
+            >
+              {getLimitedDeviceTypes(onlineDevices).map((deviceType, index) => (
                 <span 
                   key={index} 
-                  className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                  title={device.name}
+                  className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full whitespace-nowrap"
                 >
-                  {device.ip}
+                  {deviceType}
                 </span>
               ))}
             </div>

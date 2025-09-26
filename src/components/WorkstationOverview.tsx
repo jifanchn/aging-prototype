@@ -26,6 +26,9 @@ interface Workstation {
   onlineDevices: Array<{
     ip: string;
     name: string;
+    deviceType: string;
+    port: number;
+    protocol: string;
   }>;
   currentAgingProcess?: string;
   logs: Array<{
@@ -54,8 +57,8 @@ const WorkstationOverview = () => {
       name: "工位 A1", 
       status: "running", 
       onlineDevices: [
-        { ip: "192.168.1.101", name: "温度传感器 A1" },
-        { ip: "192.168.1.102", name: "电压监测器 B2" }
+        { ip: "192.168.1.101", name: "温度传感器 A1", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" },
+        { ip: "192.168.1.102", name: "电压监测器 B2", deviceType: "电压监测器", port: 502, protocol: "modbus-tcp" }
       ],
       currentAgingProcess: "高温老化流程 A",
       logs: [
@@ -80,9 +83,9 @@ const WorkstationOverview = () => {
       name: "工位 B2", 
       status: "passed", 
       onlineDevices: [
-        { ip: "192.168.1.103", name: "温度传感器 C3" },
-        { ip: "192.168.1.104", name: "电压监测器 D4" },
-        { ip: "192.168.1.105", name: "湿度传感器 E5" }
+        { ip: "192.168.1.103", name: "温度传感器 C3", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" },
+        { ip: "192.168.1.104", name: "电压监测器 D4", deviceType: "电压监测器", port: 502, protocol: "modbus-tcp" },
+        { ip: "192.168.1.105", name: "湿度传感器 E5", deviceType: "湿度传感器", port: 502, protocol: "modbus-tcp" }
       ],
       currentAgingProcess: "标准老化流程 B",
       logs: [
@@ -130,7 +133,7 @@ const WorkstationOverview = () => {
       name: "工位 D4", 
       status: "stopped", 
       onlineDevices: [
-        { ip: "192.168.1.106", name: "温度传感器 F6" }
+        { ip: "192.168.1.106", name: "温度传感器 F6", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" }
       ],
       currentAgingProcess: undefined,
       logs: [
@@ -154,8 +157,8 @@ const WorkstationOverview = () => {
       name: "工位 E5", 
       status: "running", 
       onlineDevices: [
-        { ip: "192.168.1.107", name: "温度传感器 G7" },
-        { ip: "192.168.1.108", name: "功率计 H8" }
+        { ip: "192.168.1.107", name: "温度传感器 G7", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" },
+        { ip: "192.168.1.108", name: "功率计 H8", deviceType: "功率计", port: 502, protocol: "modbus-tcp" }
       ],
       currentAgingProcess: "高温老化流程 A",
       logs: [
@@ -180,7 +183,7 @@ const WorkstationOverview = () => {
       name: "工位 F6", 
       status: "paused", 
       onlineDevices: [
-        { ip: "192.168.1.109", name: "温度传感器 I9" }
+        { ip: "192.168.1.109", name: "温度传感器 I9", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" }
       ],
       currentAgingProcess: "低温老化流程 D",
       logs: [
@@ -225,6 +228,14 @@ const WorkstationOverview = () => {
       case 'paused': return <PauseCircle className="h-4 w-4 text-yellow-500" />;
       default: return <PauseCircle className="h-4 w-4 text-gray-500" />;
     }
+  };
+
+  // 限制显示的设备数量，超出部分用...表示
+  const getLimitedDeviceTypes = (devices: Workstation['onlineDevices'], limit = 3) => {
+    if (devices.length <= limit) {
+      return devices.map(device => device.deviceType);
+    }
+    return [...devices.slice(0, limit).map(device => device.deviceType), '...'];
   };
 
   return (
@@ -282,18 +293,22 @@ const WorkstationOverview = () => {
                 </div>
               )}
               
-              {/* 在线设备信息 */}
+              {/* 在线设备信息 - 显示设备类型，悬浮显示详细信息 */}
               <div className="space-y-1">
-                <div className="text-sm text-muted-foreground">在线设备 ({workstation.onlineDevices.length}):</div>
+                <div className="text-sm text-muted-foreground">在线设备:</div>
                 {workstation.onlineDevices.length > 0 ? (
-                  <div className="flex flex-wrap gap-1">
-                    {workstation.onlineDevices.map((device, index) => (
+                  <div 
+                    className="flex flex-wrap gap-1 max-h-12 overflow-hidden"
+                    title={workstation.onlineDevices.map(device => 
+                      `${device.deviceType} (${device.ip}:${device.port}, ${device.protocol})`
+                    ).join('\n')}
+                  >
+                    {getLimitedDeviceTypes(workstation.onlineDevices).map((deviceType, index) => (
                       <span 
                         key={index} 
-                        className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                        title={device.name}
+                        className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full whitespace-nowrap"
                       >
-                        {device.ip}
+                        {deviceType}
                       </span>
                     ))}
                   </div>
