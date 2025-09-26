@@ -38,8 +38,8 @@ const ProtocolManagement = () => {
       </div>
       
       <div className="container mx-auto py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="device-types" className="py-2">
               <Package className="h-4 w-4 mr-2" />
               设备类型
@@ -57,27 +57,39 @@ const ProtocolManagement = () => {
               Probe条件
             </TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="device-types" className="w-full">
+            <Card>
+              <CardContent className="p-0">
+                <DeviceTypeManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="scan-config" className="w-full">
+            <Card>
+              <CardContent className="p-0">
+                <RegisterScanConfig />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="register-table" className="w-full">
+            <Card>
+              <CardContent className="p-0">
+                <DeviceRegisterTable />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="probe-config" className="w-full">
+            <Card>
+              <CardContent className="p-0">
+                <DeviceProbeConfig />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
-
-        <Card className="w-full">
-          <CardContent className="p-0">
-            <TabsContent value="device-types" className="p-0">
-              <DeviceTypeManagement />
-            </TabsContent>
-            
-            <TabsContent value="scan-config" className="p-0">
-              <RegisterScanConfig />
-            </TabsContent>
-            
-            <TabsContent value="register-table" className="p-0">
-              <DeviceRegisterTable />
-            </TabsContent>
-            
-            <TabsContent value="probe-config" className="p-0">
-              <DeviceProbeConfig />
-            </TabsContent>
-          </CardContent>
-        </Card>
       </div>
       
       <MadeWithDyad />
