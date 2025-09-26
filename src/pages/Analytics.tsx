@@ -1,127 +1,241 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
-  BarChart3, 
-  TrendingUp, 
-  AlertTriangle,
-  FileText,
-  Download
+  Download,
+  Search,
+  Calendar
 } from "lucide-react";
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import { Input } from "@/components/ui/input";
+import { 
+  ResponsiveContainer, 
+  PieChart, 
+  Pie, 
+  Cell, 
+  Tooltip, 
+  Legend 
+} from "recharts";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { showSuccess, showError } from "@/utils/toast";
+
+// Mock data for aging logs
+const mockAgingLogs = [
+  { id: '1', sn: 'SN123456789', startTime: '2025-08-10T08:00:00', endTime: '2025-08-10T12:00:00', status: 'completed', workstation: '工位 A1' },
+  { id: '2', sn: 'SN123456790', startTime: '2025-08-10T09:00:00', endTime: '2025-08-10T13:30:00', status: 'failed', workstation: '工位 B2' },
+  { id: '3', sn: 'SN123456791', startTime: '2025-08-11T10:00:00', endTime: null, status: 'running', workstation: '工位 C3' },
+  { id: '4', sn: 'SN987654321', startTime: '2025-08-11T11:00:00', endTime: '2025-08-11T15:00:00', status: 'completed', workstation: '工位 D4' },
+  { id: '5', sn: 'SN987654322', startTime: '2025-08-12T08:30:00', endTime: null, status: 'running', workstation: '工位 A1' },
+];
 
 const Analytics = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [selectedLog, setSelectedLog] = useState<any>(null);
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+
+  // Mock data for the circular chart
+  const chartData = [
+    { name: '成功', value: 92, color: '#10b981' },
+    { name: '失败', value: 12, color: '#ef4444' },
+    { name: '运行中', value: 8, color: '#3b82f6' },
+  ];
+
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      showError('请输入SN编号');
+      return;
+    }
+    
+    const results = mockAgingLogs.filter(log => 
+      log.sn.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    if (results.length === 0) {
+      showError('未找到匹配的SN编号');
+      setSearchResults([]);
+    } else {
+      setSearchResults(results);
+      showSuccess(`找到 ${results.length} 条匹配记录`);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!selectedLog) {
+      showError('请选择一条记录');
+      return;
+    }
+    
+    if (!startTime || !endTime) {
+      showError('请选择开始时间和结束时间');
+      return;
+    }
+    
+    // In a real implementation, this would download the actual log file
+    // For now, we'll create a mock CSV file
+    const csvContent = `SN,${selectedLog.sn}\n工位,${selectedLog.workstation}\n状态,${selectedLog.status}\n开始时间,${startTime}\n结束时间,${endTime}\n\n时间,温度(°C),电压(V),电流(A),状态\n2025-08-10 08:00:00,25.0,220.0,0.0,启动\n2025-08-10 08:05:00,35.2,220.1,1.2,升温\n2025-08-10 08:10:00,45.8,219.9,1.8,升温\n2025-08-10 08:15:00,55.3,220.0,2.1,升温\n2025-08-10 08:20:00,65.0,220.1,2.3,恒温`;
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `aging_log_${selectedLog.sn}_${format(new Date(), 'yyyyMMdd_HHmmss')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showSuccess('日志文件下载成功');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b">
         <div className="container mx-auto py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">数据分析</h1>
-            <Button>
-              <Download className="mr-2 h-4 w-4" />
-              导出报告
-            </Button>
           </div>
         </div>
       </div>
       
       <div className="container mx-auto py-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">老化成功率</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">92.3%</div>
-              <p className="text-xs text-muted-foreground">+2.1% from last week</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">平均老化时间</CardTitle>
-              <BarChart3 className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">3.8h</div>
-              <p className="text-xs text-muted-foreground">-0.2h from last week</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">失败次数</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">12</div>
-              <p className="text-xs text-muted-foreground">-3 from last week</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">设备故障率</CardTitle>
-              <FileText className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1.2%</div>
-              <p className="text-xs text-muted-foreground">stable from last week</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>老化失败趋势</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-                <p className="text-muted-foreground">图表展示区域 - 老化失败趋势分析</p>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>工位性能对比</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-                <p className="text-muted-foreground">图表展示区域 - 工位性能对比分析</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="mt-6">
+        {/* Circular Chart Section */}
+        <Card className="mb-6">
           <CardHeader>
-            <CardTitle>质量追溯报告</CardTitle>
+            <CardTitle>老化状态统计</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-full h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [`${value} 次`, '次数']} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* SN Search Section */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>老化日志查询</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <div className="font-medium">工位 A1 - 2025-08-12</div>
-                  <div className="text-sm text-muted-foreground">老化失败 - 温度未达标</div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="输入SN编号搜索..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  />
                 </div>
-                <Button variant="outline" size="sm">查看详情</Button>
+                <Button onClick={handleSearch} className="sm:w-auto">
+                  <Search className="mr-2 h-4 w-4" />
+                  搜索
+                </Button>
               </div>
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <div className="font-medium">工位 C3 - 2025-08-11</div>
-                  <div className="text-sm text-muted-foreground">老化失败 - 电压波动</div>
+
+              {searchResults.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-medium">搜索结果 ({searchResults.length} 条)</h3>
+                  <div className="border rounded-md">
+                    {searchResults.map((log) => (
+                      <div 
+                        key={log.id}
+                        className={cn(
+                          "flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-muted/50 cursor-pointer",
+                          selectedLog?.id === log.id && "bg-muted"
+                        )}
+                        onClick={() => setSelectedLog(log)}
+                      >
+                        <div>
+                          <div className="font-medium">{log.sn}</div>
+                          <div className="text-sm text-muted-foreground">
+                            工位: {log.workstation} | 状态: {log.status === 'completed' ? '成功' : log.status === 'failed' ? '失败' : '运行中'}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            开始时间: {format(new Date(log.startTime), 'yyyy-MM-dd HH:mm:ss')}
+                            {log.endTime && ` | 结束时间: ${format(new Date(log.endTime), 'yyyy-MM-dd HH:mm:ss')}`}
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {log.status === 'completed' && (
+                            <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">成功</span>
+                          )}
+                          {log.status === 'failed' && (
+                            <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">失败</span>
+                          )}
+                          {log.status === 'running' && (
+                            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">运行中</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <Button variant="outline" size="sm">查看详情</Button>
-              </div>
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div>
-                  <div className="font-medium">工位 D4 - 2025-08-10</div>
-                  <div className="text-sm text-muted-foreground">老化通过 - 正常完成</div>
+              )}
+
+              {selectedLog && (
+                <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
+                  <h3 className="font-medium">下载日志文件</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">开始时间</label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="datetime-local"
+                          className="pl-10"
+                          value={startTime}
+                          onChange={(e) => setStartTime(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">结束时间</label>
+                      <div className="relative">
+                        <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="datetime-local"
+                          className="pl-10"
+                          value={endTime}
+                          onChange={(e) => setEndTime(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <Button onClick={handleDownload} className="w-full">
+                    <Download className="mr-2 h-4 w-4" />
+                    下载日志文件
+                  </Button>
                 </div>
-                <Button variant="outline" size="sm">查看详情</Button>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
