@@ -295,35 +295,28 @@ const WorkstationDevicePairing = () => {
             <div className="space-y-4">
               {pairings.map((pairing) => (
                 <div key={pairing.id} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-lg mb-2">{getWorkstationName(pairing.workstationId)}</h3>
-                      <div className="space-y-2">
-                        {pairing.deviceInstances.map(device => (
-                          <div key={device.id} className="bg-muted/50 rounded p-2">
-                            <div className="font-medium text-sm">{device.name || `${getDeviceTypeName(device.deviceTypeId)} ${device.ip}`}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {getDeviceTypeName(device.deviceTypeId)} | {device.ip}:{device.port}
-                            </div>
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-medium text-lg">{getWorkstationName(pairing.workstationId)}</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeletePairing(pairing.id)}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      删除配对
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {pairing.deviceInstances.map(device => (
+                      <div key={device.id} className="flex items-center justify-between w-full p-2 bg-muted/50 rounded">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{device.name || `${getDeviceTypeName(device.deviceTypeId)} ${device.ip}`}</div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {getDeviceTypeName(device.deviceTypeId)} | {device.ip}:{device.port}
                           </div>
-                        ))}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-2">
-                        创建时间: {pairing.createdAt}
-                      </div>
-                    </div>
-                    <div className="flex flex-col space-y-2 ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeletePairing(pairing.id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        删除配对
-                      </Button>
-                      {pairing.deviceInstances.map(device => (
-                        <div key={device.id} className="flex space-x-1">
+                        </div>
+                        <div className="flex space-x-1 flex-shrink-0 ml-4">
                           <Button
                             variant="outline"
                             size="sm"
@@ -340,8 +333,11 @@ const WorkstationDevicePairing = () => {
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    创建时间: {pairing.createdAt}
                   </div>
                 </div>
               ))}
