@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   X,
   Play,
@@ -12,6 +12,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine
+} from "recharts";
 
 interface Workstation {
   id: number;
@@ -62,16 +72,65 @@ const getStatusIcon = (status: string) => {
   }
 };
 
+// Generate mock time-series data for charts
+const generateMockChartData = (workstation: Workstation) => {
+  const maxTime = Math.max(180, ...workstation.logs.map(log => log.timestamp));
+  const dataPoints = [];
+  
+  // Generate data points every 10 seconds
+  for (let time = 0; time <= maxTime; time += 10) {
+    const point: any = { time };
+    
+    // Temperature data (oscillates around current temp)
+    const tempBase = workstation.temperature;
+    point.temperature = tempBase + (Math.sin(time / 30) * 2);
+    
+    // Voltage data (oscillates around current voltage)
+    const voltageBase = workstation.voltage;
+    point.voltage = voltageBase + (Math.cos(time / 40) * 3);
+    
+    // Current data (if available)
+    if (workstation.importantPoints.some(p => p.name === '电流')) {
+      point.current = 2.0 + (Math.sin(time / 25) * 0.5);
+    }
+    
+    // Humidity data (if available)
+    if (workstation.importantPoints.some(p => p.name === '湿度')) {
+      point.humidity = 45 + (Math.cos(time / 35) * 10);
+    }
+    
+    // Power data (if available)
+    if (workstation.importantPoints.some(p => p.name === '功率')) {
+      point.power = 480 + (Math.sin(time / 20) * 20);
+    }
+    
+    // Pressure data (if available)
+    if (workstation.importantPoints.some(p => p.name === '压力')) {
+      point.pressure = 1.2 + (Math.cos(time / 30) * 0.3);
+    }
+    
+    dataPoints.push(point);
+  }
+  
+  return dataPoints;
+};
+
 interface WorkstationDetailViewProps {
   workstation: Workstation;
   onClose: () => void;
 }
 
 const WorkstationDetailView = ({ workstation, onClose }: WorkstationDetailViewProps) => {
+  const chartData = useMemo(() => generateMockChartData(workstation), [workstation]);
+  const maxTime = chartData.length > 0 ? chartData[chartData.length - 1].time : 180;
+  
   // Initialize all important points as selected by default
   const [selectedPoints, setSelectedPoints] = useState<string[]>(
     workstation.importantPoints.map(point => point.name)
   );
+  
+  // Range slider state
+  const [range, setRange] = useState<[number, number]>([0, Math.min(60, maxTime)]);
 
   const togglePointSelection = (pointName: string) => {
     if (selectedPoints.includes(pointName)) {
@@ -81,9 +140,38 @@ const WorkstationDetailView = ({ workstation, onClose }: WorkstationDetailViewPr
     }
   };
 
+  const handleRangeChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const value = parseInt(e.target.value);
+    if (index === 0) {
+      setRange([Math.min(value, range[1] - 10), range[1]]);
+    } else {
+      setRange([range[0], Math.max(value, range[0] + 10)]);
+    }
+  };
+
+  // Filter chart data based on selected range
+  const filteredChartData = chartData.filter(point => 
+    point.time >= range[0] && point.time <= range[1]
+  );
+
+  // Get color for each parameter
+  const getLineColor = (paramName: string) => {
+    const colors = {
+      '温度': '#ef4444',
+      '电压': '#3b82f6',
+      '电流': '#10b981',
+      '湿度': '#8b5cf6',
+      '功率': '#f59e0b',
+      '压力': '#06b6d4',
+      '风扇转速': '#84cc16',
+      '冷却液流量': '#ec4899'
+    };
+    return colors[paramName as keyof typeof colors] || '#6b7280';
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+      <div className="bg-background rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-6 pb-4 border-b">
           {/* Adjusted title positioning - moved away from close button */}
           <div className="flex items-center space-x-3">
@@ -103,7 +191,7 @@ const WorkstationDetailView = ({ workstation, onClose }: WorkstationDetailViewPr
         {/* Fixed scrolling container */}
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
-            {/* Status and Basic Info - Added mt-0 since it's the first element */}
+            {/* Status and Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader>
@@ -158,35 +246,154 @@ const WorkstationDetailView = ({ workstation, onClose }: WorkstationDetailViewPr
               </Card>
             </div>
 
-            {/* Curves Section - Renamed from "重要参数" to "曲线图" */}
+            {/* Curves Section with real charts */}
             <Card>
               <CardHeader>
                 <CardTitle>曲线图</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {/* Mock curve charts - showing all by default */}
-                  {workstation.importantPoints.map((point) => (
-                    <div key={point.name} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{point.name} ({point.unit})</span>
-                        <span className="text-sm font-mono">
-                          当前值: {typeof point.value === 'boolean' ? (point.value ? '是' : '否') : point.value}
-                        </span>
-                      </div>
-                      {/* Mock curve visualization */}
-                      <div className="h-24 bg-muted rounded border flex items-center justify-center">
-                        <div className="text-xs text-muted-foreground">
-                          {point.name} 曲线图 - 模拟数据
-                        </div>
-                      </div>
+                  {filteredChartData.length > 0 ? (
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={filteredChartData}
+                          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <XAxis 
+                            dataKey="time" 
+                            label={{ value: '时间 (秒)', position: 'insideBottomRight', offset: -5 }}
+                            tick={{ fontSize: 12 }}
+                          />
+                          <YAxis 
+                            label={{ value: '数值', angle: -90, position: 'insideLeft' }}
+                            tick={{ fontSize: 12 }}
+                          />
+                          <Tooltip 
+                            formatter={(value, name) => {
+                              const paramName = name === 'temperature' ? '温度' : 
+                                              name === 'voltage' ? '电压' :
+                                              name === 'current' ? '电流' :
+                                              name === 'humidity' ? '湿度' :
+                                              name === 'power' ? '功率' :
+                                              name === 'pressure' ? '压力' : name;
+                              const unit = workstation.importantPoints.find(p => p.name === paramName)?.unit || '';
+                              return [`${value}${unit}`, paramName];
+                            }}
+                            labelFormatter={(time) => `时间: ${time}s`}
+                          />
+                          
+                          {/* Render lines for selected parameters */}
+                          {selectedPoints.includes('温度') && (
+                            <Line 
+                              type="monotone" 
+                              dataKey="temperature" 
+                              name="温度" 
+                              stroke={getLineColor('温度')} 
+                              strokeWidth={2}
+                              dot={false}
+                              activeDot={{ r: 6 }}
+                            />
+                          )}
+                          {selectedPoints.includes('电压') && (
+                            <Line 
+                              type="monotone" 
+                              dataKey="voltage" 
+                              name="电压" 
+                              stroke={getLineColor('电压')} 
+                              strokeWidth={2}
+                              dot={false}
+                              activeDot={{ r: 6 }}
+                            />
+                          )}
+                          {selectedPoints.includes('电流') && (
+                            <Line 
+                              type="monotone" 
+                              dataKey="current" 
+                              name="电流" 
+                              stroke={getLineColor('电流')} 
+                              strokeWidth={2}
+                              dot={false}
+                              activeDot={{ r: 6 }}
+                            />
+                          )}
+                          {selectedPoints.includes('湿度') && (
+                            <Line 
+                              type="monotone" 
+                              dataKey="humidity" 
+                              name="湿度" 
+                              stroke={getLineColor('湿度')} 
+                              strokeWidth={2}
+                              dot={false}
+                              activeDot={{ r: 6 }}
+                            />
+                          )}
+                          {selectedPoints.includes('功率') && (
+                            <Line 
+                              type="monotone" 
+                              dataKey="power" 
+                              name="功率" 
+                              stroke={getLineColor('功率')} 
+                              strokeWidth={2}
+                              dot={false}
+                              activeDot={{ r: 6 }}
+                            />
+                          )}
+                          {selectedPoints.includes('压力') && (
+                            <Line 
+                              type="monotone" 
+                              dataKey="pressure" 
+                              name="压力" 
+                              stroke={getLineColor('压力')} 
+                              strokeWidth={2}
+                              dot={false}
+                              activeDot={{ r: 6 }}
+                            />
+                          )}
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="h-80 flex items-center justify-center text-muted-foreground">
+                      无数据可显示
+                    </div>
+                  )}
+                  
+                  {/* Range slider for time navigation */}
+                  <div className="space-y-2 pt-4">
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>时间范围: {range[0]}s - {range[1]}s</span>
+                      <span>总时长: {maxTime}s</span>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <input
+                        type="range"
+                        min="0"
+                        max={maxTime}
+                        value={range[0]}
+                        onChange={(e) => handleRangeChange(e, 0)}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <input
+                        type="range"
+                        min="0"
+                        max={maxTime}
+                        value={range[1]}
+                        onChange={(e) => handleRangeChange(e, 1)}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>0s</span>
+                      <span>{maxTime}s</span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Important Parameters Selection - Keep this section but it's now for curve selection */}
+            {/* Curve Selection */}
             <Card>
               <CardHeader>
                 <CardTitle>曲线选择</CardTitle>
@@ -211,7 +418,7 @@ const WorkstationDetailView = ({ workstation, onClose }: WorkstationDetailViewPr
               </CardContent>
             </Card>
 
-            {/* Logs - Fixed two-column alignment with fixed width timestamp */}
+            {/* Logs - Fixed two-column alignment */}
             <Card>
               <CardHeader>
                 <CardTitle>运行日志</CardTitle>
