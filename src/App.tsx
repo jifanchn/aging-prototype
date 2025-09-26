@@ -8,6 +8,7 @@ import WorkstationManagement from "./pages/WorkstationManagement";
 import ProtocolManagement from "./pages/ProtocolManagement";
 import AgingProcessManagement from "./pages/AgingProcessManagement";
 import Analytics from "./pages/Analytics";
+import SystemManagement from "./pages/SystemManagement";
 import NotFound from "./pages/NotFound";
 import Navbar from "@/components/ui/navbar";
 
@@ -26,7 +27,7 @@ const App = () => (
           <Route path="/protocols" element={<ProtocolManagement />} />
           <Route path="/aging-processes" element={<AgingProcessManagement />} />
           <Route path="/analytics" element={<Analytics />} />
-          <Route path="/system" element={<div className="p-6">系统管理页面</div>} />
+          <Route path="/system" element={<SystemManagement />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
