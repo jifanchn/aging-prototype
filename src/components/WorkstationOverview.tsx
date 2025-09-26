@@ -404,7 +404,7 @@ const WorkstationOverview = () => {
                 )}
               </div>
 
-              {/* 操作按钮 - 固定黑色操作按钮 */}
+              {/* 操作按钮 - 固定黑色操作按钮，修复悬停样式 */}
               <div className="flex flex-wrap gap-2 pt-2 min-h-12">
                 <Button 
                   size="sm" 
@@ -419,7 +419,7 @@ const WorkstationOverview = () => {
                     <Button 
                       size="sm" 
                       variant="outline"
-                      className="bg-black text-white hover:bg-gray-800 flex-1 min-w-0"
+                      className="bg-black text-white hover:bg-gray-800 hover:text-white flex-1 min-w-0"
                     >
                       操作
                       <MoreVertical className="h-3 w-3 ml-1" />
