@@ -262,23 +262,21 @@ const Dashboard = () => {
             <CardTitle>工位监控</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-2">
               {mockWorkstations.map((workstation) => (
-                <div key={workstation.id} className={`flex items-center justify-between p-4 border rounded-lg ${getStatusColorClass(workstation.status)}`}>
-                  <div className="flex items-center space-x-4">
+                <div key={workstation.id} className={`flex items-center justify-between p-3 border rounded-lg ${getStatusColorClass(workstation.status)}`}>
+                  <div className="flex items-center space-x-3 flex-1">
                     <div className={`w-3 h-3 rounded-full ${getStatusColor(workstation.status)}`}></div>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{workstation.name}</span>
-                      <div className="flex mt-2 space-x-4">
-                        <div className="text-xs text-muted-foreground">
-                          <span className="font-medium">信息:</span> {workstation.infoMessage || '-'}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          <span className="font-medium">最新日志:</span> {workstation.logs.length > 0 ? 
-                            `${workstation.logs[workstation.logs.length - 1].timestamp}s: ${workstation.logs[workstation.logs.length - 1].content}` 
-                            : '无日志'}
-                        </div>
-                      </div>
+                    <div className="flex items-center flex-1">
+                      <span className="font-medium w-20">{workstation.name}</span>
+                      <span className="text-xs text-muted-foreground flex-1">
+                        <span className="font-medium">信息:</span> {workstation.infoMessage || '-'}
+                      </span>
+                      <span className="text-xs text-muted-foreground flex-1">
+                        <span className="font-medium">最新日志:</span> {workstation.logs.length > 0 ? 
+                          `${workstation.logs[workstation.logs.length - 1].timestamp}s: ${workstation.logs[workstation.logs.length - 1].content}` 
+                          : '无日志'}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
