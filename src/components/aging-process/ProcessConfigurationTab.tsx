@@ -33,10 +33,15 @@ system.session_id        # 当前老化会话的唯一标识符 (UUID)
 system.label             # 当前工位显示的状态标签 (可读写)
 system.logs              # 运行日志列表: [[时间戳, "日志内容"], ...]
 system.debug_logs        # 调试日志列表: [[时间戳, "调试信息"], ...]
+system.record            # 记录数据: {"csv": "time,temp,voltage\\n1,25.5,220\\n2,26.0,221", "json": [{"time": 1, "temp": 25.5, "voltage": 220}, {"time": 2, "temp": 26.0, "voltage": 221}]}
 
 system.log("message")    # 记录普通日志信息
 system.debug("message")  # 记录调试信息 (仅在调试模式下显示)
 system.get_state()       # 获取当前状态名称
+
+# ===== 全局变量存储 =====
+vars.set("key", value)   # 存储变量，整个老化流程中可用
+vars.get("key")          # 获取存储的变量值
 
 # ===== 设备访问 (通过设备别名) =====
 dev1.get("point_name")   # 获取设备指定点的值
@@ -56,11 +61,16 @@ next()                   # 跳转到流程中的下一个状态
 system.debug(f"开始处理会话 {system.session_id}")
 system.label = "温度监控中"
 
-# 示例2: 获取设备所有变量并记录
+# 示例2: 使用全局变量存储
+vars.set("max_temperature", dev1.get("temperature"))
+current_max = vars.get("max_temperature")
+system.debug(f"记录最高温度: {current_max}")
+
+# 示例3: 获取设备所有变量并记录
 variables = dev1.get_variables()
 system.log(f"设备变量列表: {variables}")
 
-# 示例3: 检查多个条件并跳转
+# 示例4: 检查多个条件并跳转
 if dev1.get("temperature") > 80:
     system.label = "温度超限"
     system.debug("触发高温保护")
@@ -69,11 +79,12 @@ elif dev1.get("voltage") < 200:
     system.label = "电压异常"
     jumpstate("pause")
 
-# 示例4: 访问日志历史
-if len(system.logs) > 100:
-    system.debug(f"日志数量: {len(system.logs)}")
-    
-# 示例5: 完整的状态处理逻辑
+# 示例5: 访问记录数据
+csv_data = system.record["csv"]
+json_data = system.record["json"]
+system.debug(f"记录数据点数: {len(json_data)}")
+
+# 示例6: 完整的状态处理逻辑
 current_temp = dev1.get("temperature")
 current_voltage = dev1.get("voltage")
 

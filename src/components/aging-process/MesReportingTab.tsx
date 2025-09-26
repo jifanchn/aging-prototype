@@ -29,15 +29,27 @@ def report_to_mes(workstation_id, process_name, result, timestamp):
     temperature = dev1.get("temperature")
     voltage = dev1.get("voltage") 
     
+    # 获取记录数据
+    csv_data = system.record["csv"]
+    json_data = system.record["json"]
+    
+    # 获取会话ID
+    session_id = system.session_id
+    
     # 构建上报数据
     report_data = {
         "workstation_id": workstation_id,
         "process_name": process_name,
         "result": result,
         "timestamp": timestamp,
+        "session_id": session_id,
         "measurements": {
             "temperature": temperature,
             "voltage": voltage
+        },
+        "record_data": {
+            "csv": csv_data,
+            "json": json_data
         }
     }
     
