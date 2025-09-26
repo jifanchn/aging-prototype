@@ -11,6 +11,7 @@ import {
   Settings
 } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
+import CreateProcessModal from "@/components/aging-process/CreateProcessModal";
 
 interface DeviceType {
   id: string;
@@ -54,7 +55,7 @@ const ProcessManagementTab = () => {
     { id: 'type4', name: '功率计', protocol: 'modbus-rtu', description: '用于监测功率' }
   ]);
 
-  const [newProcess, setNewProcess] = useState({ name: '', description: '' });
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
   const [processDevices, setProcessDevices] = useState<ProcessDevice[]>([]);
   const [newDevice, setNewDevice] = useState({ deviceTypeId: '', alias: '' });
@@ -63,12 +64,7 @@ const ProcessManagementTab = () => {
     return deviceTypes.find(dt => dt.id === id)?.name || '未知设备类型';
   };
 
-  const handleAddProcess = () => {
-    if (!newProcess.name.trim()) {
-      showError('请输入流程名称');
-      return;
-    }
-
+  const handleAddProcess = (newProcess: { name: string; description: string }) => {
     const process: AgingProcess = {
       id: `proc-${Date.now()}`,
       name: newProcess.name,
@@ -78,7 +74,6 @@ const ProcessManagementTab = () => {
     };
 
     setProcesses([...processes, process]);
-    setNewProcess({ name: '', description: '' });
     showSuccess('老化流程创建成功');
   };
 
@@ -117,7 +112,7 @@ const ProcessManagementTab = () => {
 
     setProcessDevices([...processDevices, device]);
     
-    // 更新流程中的设备列表
+    // Update the process's device list
     if (selectedProcessId) {
       setProcesses(processes.map(p => 
         p.id === selectedProcessId 
@@ -146,10 +141,14 @@ const ProcessManagementTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* 流程列表 */}
+      {/* Process list */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>老化流程列表</CardTitle>
+          <Button onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            新建流程
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -195,40 +194,7 @@ const ProcessManagementTab = () => {
         </CardContent>
       </Card>
 
-      {/* 新建流程 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>新建老化流程</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="processName">流程名称 *</Label>
-              <Input
-                id="processName"
-                placeholder="输入流程名称"
-                value={newProcess.name}
-                onChange={(e) => setNewProcess({ ...newProcess, name: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="processDescription">流程描述</Label>
-              <Input
-                id="processDescription"
-                placeholder="输入流程描述"
-                value={newProcess.description}
-                onChange={(e) => setNewProcess({ ...newProcess, description: e.target.value })}
-              />
-            </div>
-          </div>
-          <Button onClick={handleAddProcess} className="w-full">
-            <Plus className="mr-2 h-4 w-4" />
-            创建流程
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* 设备配置（针对选中的流程） */}
+      {/* Device configuration (for selected process) */}
       {selectedProcessId && (
         <Card>
           <CardHeader>
@@ -273,7 +239,7 @@ const ProcessManagementTab = () => {
               添加设备到流程
             </Button>
 
-            {/* 已添加的设备列表 */}
+            {/* Added devices list */}
             {processDevices.length > 0 && (
               <div className="mt-6">
                 <Label>已添加的设备</Label>
@@ -302,6 +268,13 @@ const ProcessManagementTab = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Create Process Modal */}
+      <CreateProcessModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onProcessCreated={handleAddProcess}
+      />
     </div>
   );
 };
