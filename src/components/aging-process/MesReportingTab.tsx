@@ -12,15 +12,10 @@ const MesReportingTab = () => {
   const [mesScript, setMesScript] = useState(`# MES上报脚本
 # 在进入 fail, end, success 状态时自动执行
 
-def report_to_mes(workstation_id, process_name, result, timestamp):
+def report_to_mes():
     """
     上报老化结果到MES系统
-    
-    参数:
-    - workstation_id: 工位ID
-    - process_name: 老化流程名称  
-    - result: 测试结果 ('success', 'fail', 'end')
-    - timestamp: 时间戳
+    使用脚本示例中定义的系统变量和函数
     """
     import requests
     import json
@@ -36,13 +31,13 @@ def report_to_mes(workstation_id, process_name, result, timestamp):
     # 获取会话ID
     session_id = system.session_id
     
+    # 获取当前状态
+    current_state = system.get_state()
+    
     # 构建上报数据
     report_data = {
-        "workstation_id": workstation_id,
-        "process_name": process_name,
-        "result": result,
-        "timestamp": timestamp,
         "session_id": session_id,
+        "result": current_state,
         "measurements": {
             "temperature": temperature,
             "voltage": voltage
@@ -61,19 +56,14 @@ def report_to_mes(workstation_id, process_name, result, timestamp):
             headers={"Content-Type": "application/json"}
         )
         if response.status_code == 200:
-            system.log(f"MES上报成功: {result}")
+            system.log(f"MES上报成功: {current_state}")
         else:
             system.log(f"MES上报失败: {response.status_code}")
     except Exception as e:
         system.log(f"MES上报异常: {str(e)}")
 
 # 调用上报函数
-report_to_mes(
-    system.workstation_id,
-    system.process_name, 
-    system.get_state(),
-    system.timestamp
-)`);
+report_to_mes()`);
 
   const handleSaveScript = () => {
     // In a real implementation, this would save to backend
