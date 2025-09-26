@@ -157,11 +157,11 @@ const GlobalChecksTab = () => {
                       {check.mode === 'condition' && check.condition && (
                         <div className="text-sm">
                           <span className="font-medium">条件:</span> {check.condition}
+                          <div className="text-sm text-muted-foreground mt-1">
+                            跳转目标: {check.jumpTarget}
+                          </div>
                         </div>
                       )}
-                      <div className="text-sm text-muted-foreground">
-                        跳转目标: {check.jumpTarget}
-                      </div>
                     </div>
                     <Button
                       variant="outline"
