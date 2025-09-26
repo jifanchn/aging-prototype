@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { showError, showSuccess } from "@/utils/toast";
 
 const Login = () => {
@@ -16,13 +16,6 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { user, login } = useAuth();
   const navigate = useNavigate();
-
-  // If already logged in, redirect to dashboard
-  useEffect(() => {
-    if (user) {
-      navigate('/');
-    }
-  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,10 +35,6 @@ const Login = () => {
       setLoading(false);
     }
   };
-
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">

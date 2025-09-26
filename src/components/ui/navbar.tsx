@@ -36,6 +36,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Navbar should only render if user is authenticated
   if (!user) {
     return null;
   }

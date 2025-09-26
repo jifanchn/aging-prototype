@@ -12,9 +12,32 @@ import SystemManagement from "./pages/SystemManagement";
 import NotFound from "./pages/NotFound";
 import Navbar from "@/components/ui/navbar";
 import Login from "./pages/Login";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 const queryClient = new QueryClient();
+
+// Protected route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Public route component (only shows navbar if user is logged in)
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  
+  return (
+    <>
+      {user && <Navbar />}
+      {children}
+    </>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -24,63 +47,89 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route 
+              path="/login" 
+              element={
+                <PublicRoute>
+                  <Login />
+                </PublicRoute>
+              } 
+            />
             <Route 
               path="/" 
               element={
-                <>
-                  <Navbar />
-                  <Dashboard />
-                </>
+                <ProtectedRoute>
+                  <>
+                    <Navbar />
+                    <Dashboard />
+                  </>
+                </ProtectedRoute>
               } 
             />
             <Route 
               path="/workstations" 
               element={
-                <>
-                  <Navbar />
-                  <WorkstationManagement />
-                </>
+                <ProtectedRoute>
+                  <>
+                    <Navbar />
+                    <WorkstationManagement />
+                  </>
+                </ProtectedRoute>
               } 
             />
             <Route 
               path="/protocols" 
               element={
-                <>
-                  <Navbar />
-                  <ProtocolManagement />
-                </>
+                <ProtectedRoute>
+                  <>
+                    <Navbar />
+                    <ProtocolManagement />
+                  </>
+                </ProtectedRoute>
               } 
             />
             <Route 
               path="/aging-processes" 
               element={
-                <>
-                  <Navbar />
-                  <AgingProcessManagement />
-                </>
+                <ProtectedRoute>
+                  <>
+                    <Navbar />
+                    <AgingProcessManagement />
+                  </>
+                </ProtectedRoute>
               } 
             />
             <Route 
               path="/analytics" 
               element={
-                <>
-                  <Navbar />
-                  <Analytics />
-                </>
+                <ProtectedRoute>
+                  <>
+                    <Navbar />
+                    <Analytics />
+                  </>
+                </ProtectedRoute>
               } 
             />
             <Route 
               path="/system" 
               element={
-                <>
-                  <Navbar />
-                  <SystemManagement />
-                </>
+                <ProtectedRoute>
+                  <>
+                    <Navbar />
+                    <SystemManagement />
+                  </>
+                </ProtectedRoute>
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            <Route 
+              path="*" 
+              element={
+                <ProtectedRoute>
+                  <NotFound />
+                </ProtectedRoute>
+              } 
+            />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

@@ -62,7 +62,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('currentUser');
-    // Navigation will be handled by the component that calls logout
   };
 
   return (
