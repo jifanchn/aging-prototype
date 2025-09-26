@@ -8,7 +8,7 @@ import {
   CheckCircle,
   XCircle,
   StopCircle,
-  AlertTriangle
+  PauseCircle
 } from "lucide-react";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Badge } from "@/components/ui/badge";
@@ -151,17 +151,19 @@ const getStatusColor = (status: string) => {
     case 'passed': return 'bg-green-500';
     case 'failed': return 'bg-red-500';
     case 'stopped': return 'bg-gray-500';
+    case 'paused': return 'bg-yellow-500';
     default: return 'bg-gray-300';
   }
 };
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case 'running': return <Play className="h-4 w-4" />;
-    case 'passed': return <CheckCircle className="h-4 w-4" />;
-    case 'failed': return <XCircle className="h-4 w-4" />;
-    case 'stopped': return <StopCircle className="h-4 w-4" />;
-    default: return <StopCircle className="h-4 w-4" />;
+    case 'running': return <Play className="h-4 w-4 text-blue-500" />;
+    case 'passed': return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case 'failed': return <XCircle className="h-4 w-4 text-red-500" />;
+    case 'stopped': return <StopCircle className="h-4 w-4 text-gray-500" />;
+    case 'paused': return <PauseCircle className="h-4 w-4 text-yellow-500" />;
+    default: return <StopCircle className="h-4 w-4 text-gray-500" />;
   }
 };
 
@@ -173,6 +175,7 @@ const Dashboard = () => {
   const passedCount = mockWorkstations.filter(ws => ws.status === 'passed').length;
   const failedCount = mockWorkstations.filter(ws => ws.status === 'failed').length;
   const stoppedCount = mockWorkstations.filter(ws => ws.status === 'stopped').length;
+  const pausedCount = mockWorkstations.filter(ws => ws.status === 'paused').length;
 
   const handleViewDetails = (workstation: Workstation) => {
     setSelectedWorkstation(workstation);
@@ -185,7 +188,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">运行中</CardTitle>
@@ -226,6 +229,16 @@ const Dashboard = () => {
               <p className="text-xs text-muted-foreground">工位已停止</p>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">已暂停</CardTitle>
+              <PauseCircle className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pausedCount}</div>
+              <p className="text-xs text-muted-foreground">工位已暂停</p>
+            </CardContent>
+          </Card>
         </div>
 
         <Card>
@@ -245,14 +258,6 @@ const Dashboard = () => {
                           `${workstation.logs[workstation.logs.length - 1].timestamp}s: ${workstation.logs[workstation.logs.length - 1].content}` 
                           : '无日志'}
                       </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Badge variant="secondary">
-                        {workstation.onlineDevices.length} 设备在线
-                      </Badge>
-                      <Badge variant="outline">
-                        {workstation.currentAgingProcess ? '1' : '0'} 流程可用
-                      </Badge>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
