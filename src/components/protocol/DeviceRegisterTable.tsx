@@ -24,7 +24,6 @@ interface RegisterMapping {
   isImportant: boolean;
   scale: number;
   offset: number;
-  // 移除了 deviceName 字段
 }
 
 interface DeviceRegisterTable {
@@ -38,6 +37,7 @@ interface DeviceRegisterTable {
 interface DeviceType {
   id: string;
   name: string;
+  protocol: string;
 }
 
 const DeviceRegisterTable = () => {
@@ -113,8 +113,10 @@ const DeviceRegisterTable = () => {
   ]);
 
   const [deviceTypes] = useState<DeviceType[]>([
-    { id: 'type1', name: '温度传感器' },
-    { id: 'type2', name: '电力监测器' }
+    { id: 'type1', name: '温度传感器', protocol: 'modbus-tcp' },
+    { id: 'type2', name: '电力监测器', protocol: 'modbus-tcp' },
+    { id: 'type3', name: 'Agave TH', protocol: 'agave-th' },
+    { id: 'type4', name: '自定义协议设备', protocol: 'custom' }
   ]);
 
   const [activeDeviceTypeId, setActiveDeviceTypeId] = useState('type1');
@@ -132,6 +134,8 @@ const DeviceRegisterTable = () => {
   });
 
   const activeTable = tables.find(table => table.deviceTypeId === activeDeviceTypeId);
+  const activeDeviceType = deviceTypes.find(type => type.id === activeDeviceTypeId);
+  const isModbusTcp = activeDeviceType?.protocol === 'modbus-tcp';
 
   const handleAddMapping = () => {
     if (!newMapping.name) {
@@ -208,29 +212,50 @@ const DeviceRegisterTable = () => {
     }
   };
 
+  // Mock data for non-Modbus TCP device types
+  const getNonModbusDataFields = (protocol: string) => {
+    if (protocol === 'agave-th') {
+      return [
+        { name: 'temperature', type: 'float32', description: '温度值 (°C)' },
+        { name: 'humidity', type: 'float32', description: '湿度值 (%)' },
+        { name: 'battery', type: 'uint16', description: '电池电量 (%)' },
+        { name: 'rssi', type: 'int16', description: '信号强度 (dBm)' }
+      ];
+    } else if (protocol === 'custom') {
+      return [
+        { name: 'status', type: 'bool', description: '设备状态' },
+        { name: 'value', type: 'float32', description: '测量值' },
+        { name: 'timestamp', type: 'uint32', description: '时间戳' }
+      ];
+    }
+    return [];
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>设备寄存器表配置</CardTitle>
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={handleExportTable}>
-              <Download className="mr-2 h-4 w-4" />
-              导出
-            </Button>
-            <label className="cursor-pointer">
-              <Button variant="outline">
-                <Upload className="mr-2 h-4 w-4" />
-                导入
+          {isModbusTcp && (
+            <div className="flex space-x-2">
+              <Button variant="outline" onClick={handleExportTable}>
+                <Download className="mr-2 h-4 w-4" />
+                导出
               </Button>
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleImportTable}
-                className="hidden"
-              />
-            </label>
-          </div>
+              <label className="cursor-pointer">
+                <Button variant="outline">
+                  <Upload className="mr-2 h-4 w-4" />
+                  导入
+                </Button>
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportTable}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           <div className="mb-4">
@@ -242,14 +267,44 @@ const DeviceRegisterTable = () => {
               <SelectContent>
                 {deviceTypes.map(type => (
                   <SelectItem key={type.id} value={type.id}>
-                    {type.name}
+                    {type.name} ({type.protocol})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {activeTable && (
+          {activeDeviceType && !isModbusTcp && (
+            <div className="space-y-4">
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  {activeDeviceType.name} 使用 {activeDeviceType.protocol} 协议，不支持寄存器映射配置。
+                  以下是该设备类型支持的数据字段：
+                </p>
+              </div>
+              
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>字段名称</TableHead>
+                    <TableHead>数据类型</TableHead>
+                    <TableHead>描述</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {getNonModbusDataFields(activeDeviceType.protocol).map((field, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{field.name}</TableCell>
+                      <TableCell>{field.type.toUpperCase()}</TableCell>
+                      <TableCell>{field.description}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {activeDeviceType && isModbusTcp && activeTable && (
             <>
               <div className="mb-4 p-4 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">{activeTable.description}</p>
@@ -400,7 +455,7 @@ const DeviceRegisterTable = () => {
         </CardContent>
       </Card>
 
-      {activeTable && (
+      {activeDeviceType && isModbusTcp && activeTable && (
         <Card>
           <CardHeader>
             <CardTitle>寄存器映射列表 - {activeTable.name}</CardTitle>
