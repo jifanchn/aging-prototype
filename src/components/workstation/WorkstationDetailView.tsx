@@ -48,6 +48,7 @@ interface Workstation {
     unit: string;
     normalRange: [number, number];
   }>;
+  infoMessage?: string;
 }
 
 const getStatusColor = (status: string) => {
@@ -220,6 +221,12 @@ const WorkstationDetailView = ({ workstation, onClose }: WorkstationDetailViewPr
                     <span className="text-sm text-muted-foreground">运行时间:</span>
                     <span className="font-medium">{workstation.uptime}</span>
                   </div>
+                  {workstation.infoMessage && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-muted-foreground">信息:</span>
+                      <span className="font-medium text-blue-600">{workstation.infoMessage}</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

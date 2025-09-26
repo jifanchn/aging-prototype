@@ -8,7 +8,8 @@ import {
   CheckCircle,
   XCircle,
   PauseCircle,
-  StopCircle
+  StopCircle,
+  Info
 } from "lucide-react";
 
 interface WorkstationCardProps {
@@ -27,8 +28,9 @@ interface WorkstationCardProps {
     timestamp: number;
     content: string;
   }>;
+  infoMessage?: string;
   onDetailsClick: () => void;
-  onActionClick: () => void;
+  onActionClick: (action: 'start' | 'stop' | 'fail' | 'delete') => void;
 }
 
 const getStatusIcon = (status: string) => {
@@ -39,6 +41,17 @@ const getStatusIcon = (status: string) => {
     case 'stopped': return <StopCircle className="h-4 w-4 text-gray-500" />;
     case 'paused': return <PauseCircle className="h-4 w-4 text-yellow-500" />;
     default: return <PauseCircle className="h-4 w-4 text-gray-500" />;
+  }
+};
+
+const getStatusColorClass = (status: string) => {
+  switch (status) {
+    case 'running': return 'border-l-blue-500';
+    case 'passed': return 'border-l-green-500';
+    case 'failed': return 'border-l-red-500';
+    case 'stopped': return 'border-l-gray-500';
+    case 'paused': return 'border-l-yellow-500';
+    default: return 'border-l-gray-300';
   }
 };
 
@@ -57,11 +70,12 @@ const WorkstationCard = ({
   onlineDevices,
   currentAgingProcess,
   logs,
+  infoMessage,
   onDetailsClick, 
   onActionClick 
 }: WorkstationCardProps) => {
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className={`hover:shadow-lg transition-shadow ${getStatusColorClass(status)}`}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{name}</CardTitle>
@@ -101,6 +115,18 @@ const WorkstationCard = ({
           )}
         </div>
 
+        {/* 信息行 - 由老化流程函数指定 */}
+        <div className="space-y-1">
+          <div className="text-sm text-muted-foreground">信息:</div>
+          {infoMessage ? (
+            <div className="text-xs bg-muted/30 p-2 rounded text-muted-foreground max-h-20 overflow-y-auto">
+              {infoMessage}
+            </div>
+          ) : (
+            <span className="text-sm text-gray-500">-</span>
+          )}
+        </div>
+
         {/* 日志显示 */}
         <div className="space-y-1">
           <div className="text-sm text-muted-foreground">最新日志:</div>
@@ -126,7 +152,28 @@ const WorkstationCard = ({
           </Button>
           <Button 
             size="sm" 
-            onClick={onActionClick}
+            onClick={() => {
+              // 根据状态确定可用的操作
+              const actions = [];
+              if (status === 'stopped' || status === 'failed') {
+                actions.push('start');
+              }
+              if (status === 'running' || status === 'paused') {
+                actions.push('stop');
+              }
+              if (status === 'running') {
+                actions.push('fail');
+              }
+              actions.push('delete');
+              
+              // 显示操作选择对话框
+              const action = window.prompt(
+                `选择操作:\n${actions.map(a => `- ${a}`).join('\n')}`
+              );
+              if (action && actions.includes(action)) {
+                onActionClick(action as any);
+              }
+            }}
           >
             操作
           </Button>
