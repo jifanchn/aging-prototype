@@ -8,23 +8,61 @@ import {
   CheckCircle,
   XCircle,
   StopCircle,
-  Wifi,
-  Link,
   AlertTriangle
 } from "lucide-react";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
+import WorkstationDetailView from "@/components/ui/workstation-detail-view";
 
-// Mock data for workstations
-const mockWorkstations = [
+interface Workstation {
+  id: number;
+  name: string;
+  status: 'running' | 'passed' | 'failed' | 'stopped' | 'paused';
+  devices: number;
+  availableProcesses: number;
+  onlineDevices: number;
+  logs: Array<{
+    timestamp: number;
+    content: string;
+  }>;
+  temperature: number;
+  voltage: number;
+  uptime: string;
+  currentAgingProcess?: string;
+  importantPoints: Array<{
+    name: string;
+    value: number | boolean;
+    unit: string;
+    normalRange: [number, number];
+  }>;
+}
+
+// Mock data for workstations with logs
+const mockWorkstations: Workstation[] = [
   { 
     id: 1, 
     name: "工位 A1", 
     status: "running", 
     devices: 2,
     availableProcesses: 2,
-    onlineDevices: 2
+    onlineDevices: 2,
+    logs: [
+      { timestamp: 0, content: "工位启动成功" },
+      { timestamp: 15, content: "设备连接正常" },
+      { timestamp: 30, content: "开始执行高温老化流程 A" },
+      { timestamp: 45, content: "温度达到设定值 65°C" },
+      { timestamp: 60, content: "电压稳定在 220V" }
+    ],
+    temperature: 65.5,
+    voltage: 220,
+    uptime: "2h 15m",
+    currentAgingProcess: "高温老化流程 A",
+    importantPoints: [
+      { name: "温度", value: 65.5, unit: "°C", normalRange: [60, 75] },
+      { name: "电压", value: 220, unit: "V", normalRange: [210, 230] },
+      { name: "电流", value: 2.3, unit: "A", normalRange: [2, 3] },
+      { name: "运行状态", value: true, unit: "", normalRange: [1, 1] }
+    ]
   },
   { 
     id: 2, 
@@ -32,7 +70,24 @@ const mockWorkstations = [
     status: "passed", 
     devices: 2,
     availableProcesses: 1,
-    onlineDevices: 2
+    onlineDevices: 2,
+    logs: [
+      { timestamp: 0, content: "工位启动成功" },
+      { timestamp: 20, content: "所有设备在线" },
+      { timestamp: 40, content: "开始执行标准老化流程 B" },
+      { timestamp: 120, content: "老化测试完成，结果通过" },
+      { timestamp: 180, content: "工位停止运行" }
+    ],
+    temperature: 70.2,
+    voltage: 219,
+    uptime: "4h 30m",
+    currentAgingProcess: "标准老化流程 B",
+    importantPoints: [
+      { name: "温度", value: 70.2, unit: "°C", normalRange: [60, 75] },
+      { name: "电压", value: 219, unit: "V", normalRange: [210, 230] },
+      { name: "湿度", value: 45, unit: "%", normalRange: [30, 60] },
+      { name: "运行状态", value: false, unit: "", normalRange: [1, 1] }
+    ]
   },
   { 
     id: 3, 
@@ -40,7 +95,24 @@ const mockWorkstations = [
     status: "failed", 
     devices: 1,
     availableProcesses: 0,
-    onlineDevices: 0
+    onlineDevices: 0,
+    logs: [
+      { timestamp: 0, content: "工位启动成功" },
+      { timestamp: 10, content: "检测到设备离线" },
+      { timestamp: 25, content: "无法启动快速老化流程 C" },
+      { timestamp: 30, content: "老化测试失败 - 设备连接异常" },
+      { timestamp: 35, content: "工位进入失败状态" }
+    ],
+    temperature: 58.1,
+    voltage: 210,
+    uptime: "1h 20m",
+    currentAgingProcess: "快速老化流程 C",
+    importantPoints: [
+      { name: "温度", value: 58.1, unit: "°C", normalRange: [60, 75] },
+      { name: "电压", value: 210, unit: "V", normalRange: [210, 230] },
+      { name: "压力", value: 1.2, unit: "bar", normalRange: [1, 2] },
+      { name: "运行状态", value: true, unit: "", normalRange: [1, 1] }
+    ]
   },
   { 
     id: 4, 
@@ -48,7 +120,23 @@ const mockWorkstations = [
     status: "stopped", 
     devices: 3,
     availableProcesses: 1,
-    onlineDevices: 2
+    onlineDevices: 2,
+    logs: [
+      { timestamp: 0, content: "工位初始化完成" },
+      { timestamp: 5, content: "部分设备离线" },
+      { timestamp: 10, content: "等待设备连接" },
+      { timestamp: 15, content: "工位处于待机状态" }
+    ],
+    temperature: 25.0,
+    voltage: 220,
+    uptime: "0h 0m",
+    currentAgingProcess: undefined,
+    importantPoints: [
+      { name: "温度", value: 25.0, unit: "°C", normalRange: [60, 75] },
+      { name: "电压", value: 220, unit: "V", normalRange: [210, 230] },
+      { name: "风扇转速", value: 0, unit: "RPM", normalRange: [1000, 3000] },
+      { name: "运行状态", value: false, unit: "", normalRange: [1, 1] }
+    ]
   },
 ];
 
@@ -73,7 +161,7 @@ const getStatusIcon = (status: string) => {
 };
 
 const Dashboard = () => {
-  const navigate = useNavigate();
+  const [selectedWorkstation, setSelectedWorkstation] = useState<Workstation | null>(null);
   
   // Calculate status counts
   const runningCount = mockWorkstations.filter(ws => ws.status === 'running').length;
@@ -81,11 +169,12 @@ const Dashboard = () => {
   const failedCount = mockWorkstations.filter(ws => ws.status === 'failed').length;
   const stoppedCount = mockWorkstations.filter(ws => ws.status === 'stopped').length;
 
-  const handleViewDetails = (workstationId: number) => {
-    // Navigate to workstations page - the detail view will be handled by the WorkstationOverview component
-    navigate('/workstations');
-    // Note: In a real implementation, we would pass the workstation ID as a query parameter or state
-    // and the WorkstationOverview component would open the detail view automatically
+  const handleViewDetails = (workstation: Workstation) => {
+    setSelectedWorkstation(workstation);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedWorkstation(null);
   };
 
   return (
@@ -156,7 +245,14 @@ const Dashboard = () => {
                 <div key={workstation.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center space-x-4">
                     <div className={`w-3 h-3 rounded-full ${getStatusColor(workstation.status)}`}></div>
-                    <span className="font-medium">{workstation.name}</span>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{workstation.name}</span>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        最新日志: {workstation.logs.length > 0 ? 
+                          `${workstation.logs[workstation.logs.length - 1].timestamp}s: ${workstation.logs[workstation.logs.length - 1].content}` 
+                          : '无日志'}
+                      </div>
+                    </div>
                     <div className="flex space-x-2">
                       <Badge variant="secondary">
                         {workstation.onlineDevices}/{workstation.devices} 设备在线
@@ -170,7 +266,7 @@ const Dashboard = () => {
                     {getStatusIcon(workstation.status)}
                     <Button 
                       size="sm" 
-                      onClick={() => handleViewDetails(workstation.id)}
+                      onClick={() => handleViewDetails(workstation)}
                     >
                       详情
                     </Button>
@@ -181,6 +277,13 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {selectedWorkstation && (
+        <WorkstationDetailView 
+          workstation={selectedWorkstation} 
+          onClose={handleCloseDetails} 
+        />
+      )}
       
       <MadeWithDyad />
     </div>
