@@ -184,18 +184,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="border-b">
-        <div className="container mx-auto py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">老化管理系统 - 仪表盘</h1>
-            <div className="flex items-center space-x-4">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
-              <span className="text-sm">系统运行正常</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
       <div className="container mx-auto py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Card>
