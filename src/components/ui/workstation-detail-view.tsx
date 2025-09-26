@@ -1,20 +1,18 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { 
+  X,
+  Play,
+  CheckCircle,
+  XCircle,
+  StopCircle,
+  PauseCircle
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Play, 
-  Pause, 
-  StopCircle, 
-  CheckCircle, 
-  XCircle,
-  Wifi,
-  Database
-} from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Workstation {
   id: number;
@@ -43,219 +41,196 @@ interface Workstation {
   }>;
 }
 
-const WorkstationDetailView = ({ workstation, onClose }: { workstation: Workstation; onClose: () => void }) => {
-  const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
-  const [isRunning, setIsRunning] = useState(workstation.status === 'running');
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'running': return 'bg-blue-500';
+    case 'passed': return 'bg-green-500';
+    case 'failed': return 'bg-red-500';
+    case 'stopped': return 'bg-gray-500';
+    case 'paused': return 'bg-yellow-500';
+    default: return 'bg-gray-300';
+  }
+};
 
-  // 生成模拟的历史数据用于图表
-  const generateHistoricalData = () => {
-    const data = [];
-    const baseTime = Date.now() - 3600000; // 1小时前
-    
-    for (let i = 0; i <= 60; i++) {
-      const timestamp = baseTime + (i * 60000); // 每分钟一个数据点
-      const pointData: any = {
-        time: new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      
-      // 为每个重要参数生成模拟数据
-      workstation.importantPoints.forEach(point => {
-        if (typeof point.value === 'number') {
-          // 生成一些波动的数据
-          const baseValue = point.value;
-          const variation = (Math.random() - 0.5) * (point.normalRange[1] - point.normalRange[0]) * 0.2;
-          pointData[point.name] = Math.max(point.normalRange[0], Math.min(point.normalRange[1], baseValue + variation));
-        }
-      });
-      
-      data.push(pointData);
-    }
-    
-    return data;
-  };
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'running': return <Play className="h-4 w-4" />;
+    case 'passed': return <CheckCircle className="h-4 w-4" />;
+    case 'failed': return <XCircle className="h-4 w-4" />;
+    case 'stopped': return <StopCircle className="h-4 w-4" />;
+    case 'paused': return <PauseCircle className="h-4 w-4" />;
+    default: return <StopCircle className="h-4 w-4" />;
+  }
+};
 
-  const historicalData = generateHistoricalData();
+interface WorkstationDetailViewProps {
+  workstation: Workstation;
+  onClose: () => void;
+}
+
+const WorkstationDetailView = ({ workstation, onClose }: WorkstationDetailViewProps) => {
+  // Initialize all important points as selected by default
+  const [selectedPoints, setSelectedPoints] = useState<string[]>(
+    workstation.importantPoints.map(point => point.name)
+  );
 
   const togglePointSelection = (pointName: string) => {
-    setSelectedPoints(prev => 
-      prev.includes(pointName) 
-        ? prev.filter(name => name !== pointName)
-        : [...prev, pointName]
-    );
-  };
-
-  const getStatusColor = () => {
-    switch (workstation.status) {
-      case 'running': return 'text-blue-500';
-      case 'passed': return 'text-green-500';
-      case 'failed': return 'text-red-500';
-      case 'stopped': return 'text-gray-500';
-      case 'paused': return 'text-yellow-500';
-      default: return 'text-gray-500';
-    }
-  };
-
-  const getStatusIcon = () => {
-    switch (workstation.status) {
-      case 'running': return <Play className="h-4 w-4" />;
-      case 'passed': return <CheckCircle className="h-4 w-4" />;
-      case 'failed': return <XCircle className="h-4 w-4" />;
-      case 'stopped': return <StopCircle className="h-4 w-4" />;
-      case 'paused': return <Pause className="h-4 w-4" />;
-      default: return <Pause className="h-4 w-4" />;
+    if (selectedPoints.includes(pointName)) {
+      setSelectedPoints(selectedPoints.filter(name => name !== pointName));
+    } else {
+      setSelectedPoints([...selectedPoints, pointName]);
     }
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>工位详情 - {workstation.name}</span>
-            <span className={`flex items-center ${getStatusColor()}`}>
-              {getStatusIcon()}
-              <span className="ml-2 capitalize">{workstation.status}</span>
-            </span>
-          </DialogTitle>
-        </DialogHeader>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-background rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-6 pb-4 border-b">
+          {/* Adjusted title positioning - moved away from close button */}
+          <div className="flex items-center space-x-3">
+            <div className={`w-3 h-3 rounded-full ${getStatusColor(workstation.status)}`}></div>
+            <h2 className="text-xl font-bold">{workstation.name} 详情</h2>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onClose}
+            className="h-8 w-8 p-0"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
         
-        <div className="space-y-6">
-          {/* 基本信息 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>基本信息</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div className="text-sm text-muted-foreground">老化配置</div>
-                <div className="font-medium">
-                  {workstation.currentAgingProcess || '无激活配置'}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">运行时间</div>
-                <div className="font-medium">{workstation.uptime}</div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">在线设备</div>
-                <div className="font-medium">
-                  {workstation.onlineDevices.length > 0 
-                    ? workstation.onlineDevices.map(d => d.name).join(', ') 
-                    : '无在线设备'
-                  }
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">温度/电压</div>
-                <div className="font-medium">{workstation.temperature}°C / {workstation.voltage}V</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 重要参数选择 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>重要参数选择</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {workstation.importantPoints.map((point, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`point-${index}`}
-                      checked={selectedPoints.includes(point.name)}
-                      onCheckedChange={() => togglePointSelection(point.name)}
-                    />
-                    <label htmlFor={`point-${index}`} className="text-sm font-medium">
-                      {point.name} ({point.value}{point.unit})
-                      {typeof point.value === 'number' && (
-                        <span className="text-xs text-muted-foreground ml-2">
-                          正常范围: {point.normalRange[0]}-{point.normalRange[1]}{point.unit}
-                        </span>
-                      )}
-                    </label>
+        <ScrollArea className="flex-1 p-6 pt-0">
+          <div className="space-y-6">
+            {/* Status and Basic Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>状态信息</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-muted-foreground">状态:</span>
+                    <Badge variant="secondary" className="flex items-center space-x-1">
+                      {getStatusIcon(workstation.status)}
+                      <span>
+                        {workstation.status === 'running' ? '运行中' : 
+                         workstation.status === 'passed' ? '老化通过' : 
+                         workstation.status === 'failed' ? '老化失败' : 
+                         workstation.status === 'stopped' ? '已停止' : '已暂停'}
+                      </span>
+                    </Badge>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-muted-foreground">老化配置:</span>
+                    <span className="font-medium">
+                      {workstation.currentAgingProcess || '无'}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-muted-foreground">运行时间:</span>
+                    <span className="font-medium">{workstation.uptime}</span>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* 曲线图表 */}
-          {selectedPoints.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>设备信息</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {workstation.onlineDevices.length > 0 ? (
+                    <div className="space-y-2">
+                      {workstation.onlineDevices.map((device, index) => (
+                        <div key={index} className="text-sm">
+                          <div className="font-medium">{device.name}</div>
+                          <div className="text-muted-foreground">
+                            {device.ip}:{device.port} ({device.protocol})
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">无在线设备</div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Curves Section - Renamed from "重要参数" to "曲线图" */}
             <Card>
               <CardHeader>
-                <CardTitle>重要参数趋势图</CardTitle>
+                <CardTitle>曲线图</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={historicalData}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      {selectedPoints.map((pointName, index) => {
-                        const point = workstation.importantPoints.find(p => p.name === pointName);
-                        if (!point || typeof point.value !== 'number') return null;
-                        
-                        // 为不同参数设置不同颜色
-                        const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088fe'];
-                        return (
-                          <Line
-                            key={pointName}
-                            type="monotone"
-                            dataKey={pointName}
-                            stroke={colors[index % colors.length]}
-                            activeDot={{ r: 8 }}
-                            name={pointName + (point.unit ? ` (${point.unit})` : '')}
-                          />
-                        );
-                      })}
-                    </LineChart>
-                  </ResponsiveContainer>
+                <div className="space-y-4">
+                  {/* Mock curve charts - showing all by default */}
+                  {workstation.importantPoints.map((point) => (
+                    <div key={point.name} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{point.name} ({point.unit})</span>
+                        <span className="text-sm font-mono">
+                          当前值: {typeof point.value === 'boolean' ? (point.value ? '是' : '否') : point.value}
+                        </span>
+                      </div>
+                      {/* Mock curve visualization */}
+                      <div className="h-24 bg-muted rounded border flex items-center justify-center">
+                        <div className="text-xs text-muted-foreground">
+                          {point.name} 曲线图 - 模拟数据
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-          )}
 
-          {/* 日志 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>运行日志</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {workstation.logs.map((log, index) => (
-                  <div key={index} className="text-sm">
-                    <span className="text-muted-foreground">{log.timestamp}s:</span> {log.content}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            {/* Important Parameters Selection - Keep this section but it's now for curve selection */}
+            <Card>
+              <CardHeader>
+                <CardTitle>曲线选择</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {workstation.importantPoints.map((point) => (
+                    <Button
+                      key={point.name}
+                      variant={selectedPoints.includes(point.name) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => togglePointSelection(point.name)}
+                      className="text-xs"
+                    >
+                      {point.name}
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  选择要显示的曲线（默认全选）
+                </p>
+              </CardContent>
+            </Card>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>关闭</Button>
-          {workstation.status === 'running' && (
-            <Button variant="outline" className="bg-red-500 hover:bg-red-600 text-white">
-              <StopCircle className="h-4 w-4 mr-2" />
-              停止
-            </Button>
-          )}
-          {(workstation.status === 'stopped' || workstation.status === 'failed') && (
-            <Button variant="outline" className="bg-green-500 hover:bg-green-600 text-white">
-              <Play className="h-4 w-4 mr-2" />
-              启动
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            {/* Logs */}
+            <Card>
+              <CardHeader>
+                <CardTitle>运行日志</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {workstation.logs.map((log, index) => (
+                    <div key={index} className="text-sm">
+                      <span className="text-muted-foreground mr-2">[{log.timestamp}s]</span>
+                      {log.content}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </ScrollArea>
+      </div>
+    </div>
   );
 };
 
