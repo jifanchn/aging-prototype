@@ -9,7 +9,8 @@ import {
   Eye, 
   EyeOff,
   Check,
-  X
+  X,
+  Lock
 } from "lucide-react";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from "@/utils/toast";
@@ -26,14 +27,13 @@ const SystemManagement = () => {
   const currentUserRole = 'admin'; // This would be dynamic in a real app
   
   const [users] = useState<User[]>([
-    { id: '1', username: 'admin', role: 'admin', canChangePassword: true },
+    { id: '1', username: 'admin', role: 'admin', canChangePassword: false }, // Admin password cannot be changed
     { id: '2', username: 'viewer', role: 'viewer', canChangePassword: true },
     { id: '3', username: 'operator', role: 'operator', canChangePassword: true },
     { id: '4', username: 'maintainer', role: 'maintainer', canChangePassword: true }
   ]);
 
   const [passwords, setPasswords] = useState<Record<string, { password: string; confirmPassword: string; showPassword: boolean }>>({
-    '1': { password: '', confirmPassword: '', showPassword: false },
     '2': { password: '', confirmPassword: '', showPassword: false },
     '3': { password: '', confirmPassword: '', showPassword: false },
     '4': { password: '', confirmPassword: '', showPassword: false }
@@ -63,6 +63,12 @@ const SystemManagement = () => {
     // Only admin can change passwords
     if (currentUserRole !== 'admin') {
       showError('只有管理员可以修改密码');
+      return;
+    }
+
+    // Admin password cannot be changed
+    if (user.role === 'admin') {
+      showError('管理员密码由系统维护，不可修改');
       return;
     }
 
@@ -130,22 +136,32 @@ const SystemManagement = () => {
                       <h3 className="font-medium text-lg">{user.username}</h3>
                       <p className="text-sm text-muted-foreground">{getRoleDisplayName(user.role)}</p>
                     </div>
-                    {currentUserRole === 'admin' && (
+                    {user.role !== 'admin' && currentUserRole === 'admin' && (
                       <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
                         可修改
                       </span>
                     )}
+                    {user.role === 'admin' && (
+                      <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full flex items-center">
+                        <Lock className="h-3 w-3 mr-1" />
+                        系统维护
+                      </span>
+                    )}
                   </div>
                   
-                  {currentUserRole === 'admin' ? (
+                  {user.role === 'admin' ? (
+                    <div className="text-sm text-muted-foreground">
+                      <p>管理员密码由系统维护，不可通过界面修改</p>
+                    </div>
+                  ) : currentUserRole === 'admin' ? (
                     <div className="space-y-3">
                       <div className="space-y-2">
                         <Label htmlFor={`password-${user.id}`}>新密码</Label>
                         <div className="relative">
                           <Input
                             id={`password-${user.id}`}
-                            type={passwords[user.id].showPassword ? "text" : "password"}
-                            value={passwords[user.id].password}
+                            type={passwords[user.id]?.showPassword ? "text" : "password"}
+                            value={passwords[user.id]?.password || ''}
                             onChange={(e) => handlePasswordChange(user.id, 'password', e.target.value)}
                             placeholder="输入新密码"
                           />
@@ -154,7 +170,7 @@ const SystemManagement = () => {
                             className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
                             onClick={() => togglePasswordVisibility(user.id)}
                           >
-                            {passwords[user.id].showPassword ? (
+                            {passwords[user.id]?.showPassword ? (
                               <EyeOff className="h-4 w-4" />
                             ) : (
                               <Eye className="h-4 w-4" />
@@ -168,8 +184,8 @@ const SystemManagement = () => {
                         <div className="relative">
                           <Input
                             id={`confirm-password-${user.id}`}
-                            type={passwords[user.id].showPassword ? "text" : "password"}
-                            value={passwords[user.id].confirmPassword}
+                            type={passwords[user.id]?.showPassword ? "text" : "password"}
+                            value={passwords[user.id]?.confirmPassword || ''}
                             onChange={(e) => handlePasswordChange(user.id, 'confirmPassword', e.target.value)}
                             placeholder="再次输入新密码"
                           />
@@ -178,7 +194,7 @@ const SystemManagement = () => {
                             className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
                             onClick={() => togglePasswordVisibility(user.id)}
                           >
-                            {passwords[user.id].showPassword ? (
+                            {passwords[user.id]?.showPassword ? (
                               <EyeOff className="h-4 w-4" />
                             ) : (
                               <Eye className="h-4 w-4" />
@@ -190,7 +206,7 @@ const SystemManagement = () => {
                       <div className="flex justify-end">
                         <Button 
                           onClick={() => handleSavePassword(user)}
-                          disabled={!passwords[user.id].password}
+                          disabled={!passwords[user.id]?.password}
                         >
                           <Check className="mr-2 h-4 w-4" />
                           保存密码
