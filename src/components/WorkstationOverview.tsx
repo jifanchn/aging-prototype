@@ -13,11 +13,18 @@ import {
   CheckCircle,
   XCircle,
   PauseCircle,
-  StopCircle
+  StopCircle,
+  MoreVertical
 } from "lucide-react";
 import WorkstationCard from "@/components/ui/workstation-card";
 import WorkstationDetailView from "@/components/ui/workstation-detail-view";
 import { showSuccess } from "@/utils/toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Workstation {
   id: number;
@@ -238,74 +245,69 @@ const WorkstationOverview = () => {
     return [...devices.slice(0, limit).map(device => device.deviceType), '...'];
   };
 
-  const getControlButtons = (workstation: Workstation) => {
-    const buttons = [];
+  const getAvailableActions = (workstation: Workstation) => {
+    const actions = [];
     
     if (workstation.status === 'stopped' || workstation.status === 'failed') {
-      buttons.push(
-        <Button 
-          key="start" 
-          size="sm" 
-          variant="outline"
-          className="bg-green-500 hover:bg-green-600 text-white"
-          onClick={() => showSuccess(`工位 ${workstation.name} 启动成功`)}
-        >
-          <Play className="h-3 w-3 mr-1" />
-          启动
-        </Button>
-      );
+      actions.push({ 
+        label: '启动', 
+        icon: <Play className="h-3 w-3 mr-2" />,
+        action: () => showSuccess(`工位 ${workstation.name} 启动成功`),
+        className: 'text-green-600 hover:bg-green-50'
+      });
     }
     
     if (workstation.status === 'running') {
-      buttons.push(
-        <Button 
-          key="pause" 
-          size="sm" 
-          variant="outline"
-          className="bg-yellow-500 hover:bg-yellow-600 text-white"
-          onClick={() => showSuccess(`工位 ${workstation.name} 暂停成功`)}
-        >
-          <PauseCircle className="h-3 w-3 mr-1" />
-          暂停
-        </Button>
-      );
+      actions.push({ 
+        label: '暂停', 
+        icon: <PauseCircle className="h-3 w-3 mr-2" />,
+        action: () => showSuccess(`工位 ${workstation.name} 暂停成功`),
+        className: 'text-yellow-600 hover:bg-yellow-50'
+      });
     }
     
     if (workstation.status === 'paused') {
-      buttons.push(
-        <Button 
-          key="resume" 
-          size="sm" 
-          variant="outline"
-          className="bg-blue-500 hover:bg-blue-600 text-white"
-          onClick={() => showSuccess(`工位 ${workstation.name} 继续成功`)}
-        >
-          <Play className="h-3 w-3 mr-1" />
-          继续
-        </Button>
-      );
+      actions.push({ 
+        label: '继续', 
+        icon: <Play className="h-3 w-3 mr-2" />,
+        action: () => showSuccess(`工位 ${workstation.name} 继续成功`),
+        className: 'text-blue-600 hover:bg-blue-50'
+      });
     }
     
     if (workstation.status === 'running' || workstation.status === 'paused') {
-      buttons.push(
-        <Button 
-          key="stop" 
-          size="sm" 
-          variant="outline"
-          className="bg-red-500 hover:bg-red-600 text-white"
-          onClick={() => {
-            if (window.confirm(`确定要停止工位 ${workstation.name} 吗？`)) {
-              showSuccess(`工位 ${workstation.name} 停止成功`);
-            }
-          }}
-        >
-          <StopCircle className="h-3 w-3 mr-1" />
-          停止
-        </Button>
-      );
+      actions.push({ 
+        label: '停止', 
+        icon: <StopCircle className="h-3 w-3 mr-2" />,
+        action: () => {
+          if (window.confirm(`确定要停止工位 ${workstation.name} 吗？`)) {
+            showSuccess(`工位 ${workstation.name} 停止成功`);
+          }
+        },
+        className: 'text-red-600 hover:bg-red-50'
+      });
     }
     
-    return buttons;
+    // 添加编辑和删除选项
+    actions.push({ 
+      label: '编辑', 
+      icon: <MoreVertical className="h-3 w-3 mr-2" />,
+      action: () => showSuccess(`编辑工位 ${workstation.name}`),
+      className: 'text-blue-600 hover:bg-blue-50'
+    });
+    
+    actions.push({ 
+      label: '删除', 
+      icon: <MoreVertical className="h-3 w-3 mr-2" />,
+      action: () => {
+        if (window.confirm(`确定要删除工位 ${workstation.name} 吗？删除后无法恢复！`)) {
+          showSuccess(`工位 ${workstation.name} 删除成功`);
+        }
+      },
+      className: 'text-red-600 hover:bg-red-50'
+    });
+    
+    return actions;
   };
 
   return (
@@ -402,7 +404,7 @@ const WorkstationOverview = () => {
                 )}
               </div>
 
-              {/* 操作按钮 */}
+              {/* 操作按钮 - 固定黑色操作按钮 */}
               <div className="flex flex-wrap gap-2 pt-2 min-h-12">
                 <Button 
                   size="sm" 
@@ -412,9 +414,33 @@ const WorkstationOverview = () => {
                 >
                   详情
                 </Button>
-                <div className="flex flex-wrap gap-1 flex-1 min-w-0 justify-end">
-                  {getControlButtons(workstation)}
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="bg-black text-white hover:bg-gray-800 flex-1 min-w-0"
+                    >
+                      操作
+                      <MoreVertical className="h-3 w-3 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {getAvailableActions(workstation).map((action, index) => (
+                      <DropdownMenuItem 
+                        key={index}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          action.action();
+                        }}
+                        className={action.className}
+                      >
+                        {action.icon}
+                        {action.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </CardContent>
           </Card>
