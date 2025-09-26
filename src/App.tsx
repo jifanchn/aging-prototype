@@ -12,106 +12,79 @@ import SystemManagement from "./pages/SystemManagement";
 import NotFound from "./pages/NotFound";
 import Navbar from "@/components/ui/navbar";
 import Login from "./pages/Login";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
-// Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-const AppContent = () => (
-  <TooltipProvider>
-    <Toaster />
-    <Sonner />
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route 
-            path="/" 
-            element={
-              <ProtectedRoute>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route 
+              path="/" 
+              element={
                 <>
                   <Navbar />
                   <Dashboard />
                 </>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/workstations" 
-            element={
-              <ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/workstations" 
+              element={
                 <>
                   <Navbar />
                   <WorkstationManagement />
                 </>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/protocols" 
-            element={
-              <ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/protocols" 
+              element={
                 <>
                   <Navbar />
                   <ProtocolManagement />
                 </>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/aging-processes" 
-            element={
-              <ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/aging-processes" 
+              element={
                 <>
                   <Navbar />
                   <AgingProcessManagement />
                 </>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/analytics" 
-            element={
-              <ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/analytics" 
+              element={
                 <>
                   <Navbar />
                   <Analytics />
                 </>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/system" 
-            element={
-              <ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/system" 
+              element={
                 <>
                   <Navbar />
                   <SystemManagement />
                 </>
-              </ProtectedRoute>
-            } 
-          />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
-  </TooltipProvider>
-);
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AppContent />
+              } 
+            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 

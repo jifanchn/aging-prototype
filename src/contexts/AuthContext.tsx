@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 // Define the user roles
 type UserRole = 'admin' | 'viewer' | 'maintainer' | 'operator';
@@ -29,7 +28,6 @@ const VALID_USERS: Record<string, UserRole> = {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is already logged in (from localStorage)
@@ -64,7 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('currentUser');
-    navigate('/login');
+    // Navigation will be handled by the component that calls logout
   };
 
   return (
