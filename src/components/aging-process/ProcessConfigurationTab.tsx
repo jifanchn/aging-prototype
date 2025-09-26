@@ -30,14 +30,17 @@ const ProcessConfigurationTab = () => {
 system.aging_time        # 老化总运行时间 (秒)
 system.state_time        # 当前状态已运行时间 (秒)
 system.session_id        # 当前老化会话的唯一标识符 (UUID)
+system.start_time        # 老化启动时间戳 (秒级)
 system.label             # 当前工位显示的状态标签 (可读写)
 system.logs              # 运行日志列表: [[时间戳, "日志内容"], ...]
 system.debug_logs        # 调试日志列表: [[时间戳, "调试信息"], ...]
-system.record            # 记录数据: [{"time": 1, "temp": 25.5, "voltage": 220}, {"time": 2, "temp": 26.0, "voltage": 221}]
+system.record            # 记录数据: [{"time": 1, "dev1.temp": 25.5, "dev1.voltage": 220}, {"time": 2, "dev1.temp": 26.0, "dev1.voltage": 221}]
 
 system.log("message")    # 记录普通日志信息
 system.debug("message")  # 记录调试信息 (仅在调试模式下显示)
 system.get_state()       # 获取当前状态名称
+system.set_info("TEXT")  # 设置工位信息显示 (例如: SN编号、设备信息等)
+system.replace_title("TEXT")  # 替换工位标题显示 (例如: SN编号、设备信息等)
 
 # ===== 全局变量存储 =====
 vars.set("key", value)   # 存储变量，整个老化流程中可用
@@ -59,7 +62,8 @@ next()                   # 跳转到流程中的下一个状态
 
 # 示例1: 使用调试功能和会话ID
 system.debug(f"开始处理会话 {system.session_id}")
-system.label = "温度监控中"
+system.set_info(f"SN: ABC123456")  # 显示设备SN信息
+system.replace_title(f"设备 ABC123456")  # 替换工位标题
 
 # 示例2: 使用全局变量存储
 vars.set("max_temperature", dev1.get("temperature"))
@@ -72,26 +76,24 @@ system.log(f"设备变量列表: {variables}")
 
 # 示例4: 检查多个条件并跳转
 if dev1.get("temperature") > 80:
-    system.label = "温度超限"
+    system.set_info("温度超限警告")
     system.debug("触发高温保护")
     jumpstate("fail")
 elif dev1.get("voltage") < 200:
-    system.label = "电压异常"
+    system.set_info("电压异常")
     jumpstate("pause")
 
-# 示例5: 访问记录数据
+# 示例5: 访问记录数据 (注意变量名前有设备名前缀)
 record_data = system.record
 system.debug(f"记录数据点数: {len(record_data)}")
+# 记录数据格式: {"time": 123, "dev1.temp": 65.5, "dev1.voltage": 220.0, "dev2.humidity": 45.0}
 
 # 示例6: 完整的状态处理逻辑
 current_temp = dev1.get("temperature")
 current_voltage = dev1.get("voltage")
 
-# 记录调试信息
-system.debug(f"温度: {current_temp}°C, 电压: {current_voltage}V")
-
-# 更新工位显示标签
-system.label = f"运行中 - {current_temp}°C"
+# 更新工位显示信息
+system.set_info(f"温度: {current_temp}°C, 电压: {current_voltage}V")
 
 # 条件判断
 if current_temp >= 75:
