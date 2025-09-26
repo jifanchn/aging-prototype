@@ -64,26 +64,24 @@ const Analytics = () => {
     }
   };
 
-  const handleDownload = () => {
-    if (!selectedLog) {
-      showError('请选择一条记录');
-      return;
-    }
+  const handleDownload = (log: any) => {
+    // Set default time range based on log data
+    const defaultStartTime = log.startTime ? format(new Date(log.startTime), 'yyyy-MM-dd HH:mm') : '';
+    const defaultEndTime = log.endTime ? format(new Date(log.endTime), 'yyyy-MM-dd HH:mm') : format(new Date(), 'yyyy-MM-dd HH:mm');
     
-    if (!startTime || !endTime) {
-      showError('请选择开始时间和结束时间');
-      return;
-    }
+    setStartTime(defaultStartTime);
+    setEndTime(defaultEndTime);
+    setSelectedLog(log);
     
     // In a real implementation, this would download the actual log file
     // For now, we'll create a mock CSV file
-    const csvContent = `SN,${selectedLog.sn}\n工位,${selectedLog.workstation}\n状态,${selectedLog.status}\n开始时间,${startTime}\n结束时间,${endTime}\n\n时间,温度(°C),电压(V),电流(A),状态\n2025-08-10 08:00:00,25.0,220.0,0.0,启动\n2025-08-10 08:05:00,35.2,220.1,1.2,升温\n2025-08-10 08:10:00,45.8,219.9,1.8,升温\n2025-08-10 08:15:00,55.3,220.0,2.1,升温\n2025-08-10 08:20:00,65.0,220.1,2.3,恒温`;
+    const csvContent = `SN,${log.sn}\n工位,${log.workstation}\n状态,${log.status}\n开始时间,${defaultStartTime}\n结束时间,${defaultEndTime}\n\n时间,温度(°C),电压(V),电流(A),状态\n2025-08-10 08:00:00,25.0,220.0,0.0,启动\n2025-08-10 08:05:00,35.2,220.1,1.2,升温\n2025-08-10 08:10:00,45.8,219.9,1.8,升温\n2025-08-10 08:15:00,55.3,220.0,2.1,升温\n2025-08-10 08:20:00,65.0,220.1,2.3,恒温`;
     
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `aging_log_${selectedLog.sn}_${format(new Date(), 'yyyyMMdd_HHmmss')}.csv`);
+    link.setAttribute('download', `aging_log_${log.sn}_${format(new Date(), 'yyyyMMdd_HHmmss')}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -138,7 +136,7 @@ const Analytics = () => {
         </Card>
 
         {/* SN Search Section */}
-        <Card className="mb-6">
+        <Card>
           <CardHeader>
             <CardTitle>老化日志查询</CardTitle>
           </CardHeader>
@@ -168,11 +166,7 @@ const Analytics = () => {
                     {searchResults.map((log) => (
                       <div 
                         key={log.id}
-                        className={cn(
-                          "flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-muted/50 cursor-pointer",
-                          selectedLog?.id === log.id && "bg-muted"
-                        )}
-                        onClick={() => setSelectedLog(log)}
+                        className="flex items-center justify-between p-3 border-b last:border-b-0 hover:bg-muted/50"
                       >
                         <div>
                           <div className="font-medium">{log.sn}</div>
@@ -194,46 +188,17 @@ const Analytics = () => {
                           {log.status === 'running' && (
                             <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">运行中</span>
                           )}
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleDownload(log)}
+                          >
+                            <Download className="h-3 w-3 mr-1" />
+                            下载
+                          </Button>
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {selectedLog && (
-                <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
-                  <h3 className="font-medium">下载日志文件</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">开始时间</label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          type="datetime-local"
-                          className="pl-10"
-                          value={startTime}
-                          onChange={(e) => setStartTime(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">结束时间</label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          type="datetime-local"
-                          className="pl-10"
-                          value={endTime}
-                          onChange={(e) => setEndTime(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <Button onClick={handleDownload} className="w-full">
-                    <Download className="mr-2 h-4 w-4" />
-                    下载日志文件
-                  </Button>
                 </div>
               )}
             </div>
