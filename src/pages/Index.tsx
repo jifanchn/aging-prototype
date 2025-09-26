@@ -3,17 +3,25 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { 
   Monitor, 
+  Settings, 
+  Users, 
+  BarChart3,
   Play,
   StopCircle,
+  AlertTriangle,
   CheckCircle,
-  XCircle
+  XCircle,
+  PauseCircle,
+  Wifi,
+  Link
 } from "lucide-react";
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import WorkstationDetailView from "@/components/ui/workstation-detail-view";
 
-// Mock data for workstations with full details
+// Mock data reflecting the correct relationships
 const mockWorkstations = [
   { 
     id: 1, 
@@ -21,28 +29,7 @@ const mockWorkstations = [
     status: "running", 
     devices: 2,
     availableProcesses: 2,
-    onlineDevices: 2,
-    onlineDevicesDetails: [
-      { ip: "192.168.1.101", name: "温度传感器 A1", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" },
-      { ip: "192.168.1.102", name: "电压监测器 B2", deviceType: "电压监测器", port: 502, protocol: "modbus-tcp" }
-    ],
-    currentAgingProcess: "高温老化流程 A",
-    logs: [
-      { timestamp: 0, content: "工位启动成功" },
-      { timestamp: 15, content: "设备连接正常" },
-      { timestamp: 30, content: "开始执行高温老化流程 A" },
-      { timestamp: 45, content: "温度达到设定值 65°C" },
-      { timestamp: 60, content: "电压稳定在 220V" }
-    ],
-    temperature: 65.5,
-    voltage: 220,
-    uptime: "2h 15m",
-    importantPoints: [
-      { name: "温度", value: 65.5, unit: "°C", normalRange: [60, 75] },
-      { name: "电压", value: 220, unit: "V", normalRange: [210, 230] },
-      { name: "电流", value: 2.3, unit: "A", normalRange: [2, 3] },
-      { name: "运行状态", value: true, unit: "", normalRange: [1, 1] }
-    ]
+    onlineDevices: 2
   },
   { 
     id: 2, 
@@ -50,29 +37,7 @@ const mockWorkstations = [
     status: "passed", 
     devices: 2,
     availableProcesses: 1,
-    onlineDevices: 2,
-    onlineDevicesDetails: [
-      { ip: "192.168.1.103", name: "温度传感器 C3", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" },
-      { ip: "192.168.1.104", name: "电压监测器 D4", deviceType: "电压监测器", port: 502, protocol: "modbus-tcp" },
-      { ip: "192.168.1.105", name: "湿度传感器 E5", deviceType: "湿度传感器", port: 502, protocol: "modbus-tcp" }
-    ],
-    currentAgingProcess: "标准老化流程 B",
-    logs: [
-      { timestamp: 0, content: "工位启动成功" },
-      { timestamp: 20, content: "所有设备在线" },
-      { timestamp: 40, content: "开始执行标准老化流程 B" },
-      { timestamp: 120, content: "老化测试完成，结果通过" },
-      { timestamp: 180, content: "工位停止运行" }
-    ],
-    temperature: 70.2,
-    voltage: 219,
-    uptime: "4h 30m",
-    importantPoints: [
-      { name: "温度", value: 70.2, unit: "°C", normalRange: [60, 75] },
-      { name: "电压", value: 219, unit: "V", normalRange: [210, 230] },
-      { name: "湿度", value: 45, unit: "%", normalRange: [30, 60] },
-      { name: "运行状态", value: false, unit: "", normalRange: [1, 1] }
-    ]
+    onlineDevices: 2
   },
   { 
     id: 3, 
@@ -80,25 +45,7 @@ const mockWorkstations = [
     status: "failed", 
     devices: 1,
     availableProcesses: 0,
-    onlineDevices: 0,
-    onlineDevicesDetails: [],
-    currentAgingProcess: "快速老化流程 C",
-    logs: [
-      { timestamp: 0, content: "工位启动成功" },
-      { timestamp: 10, content: "检测到设备离线" },
-      { timestamp: 25, content: "无法启动快速老化流程 C" },
-      { timestamp: 30, content: "老化测试失败 - 设备连接异常" },
-      { timestamp: 35, content: "工位进入失败状态" }
-    ],
-    temperature: 58.1,
-    voltage: 210,
-    uptime: "1h 20m",
-    importantPoints: [
-      { name: "温度", value: 58.1, unit: "°C", normalRange: [60, 75] },
-      { name: "电压", value: 210, unit: "V", normalRange: [210, 230] },
-      { name: "压力", value: 1.2, unit: "bar", normalRange: [1, 2] },
-      { name: "运行状态", value: true, unit: "", normalRange: [1, 1] }
-    ]
+    onlineDevices: 0
   },
   { 
     id: 4, 
@@ -106,26 +53,7 @@ const mockWorkstations = [
     status: "stopped", 
     devices: 3,
     availableProcesses: 1,
-    onlineDevices: 2,
-    onlineDevicesDetails: [
-      { ip: "192.168.1.106", name: "温度传感器 F6", deviceType: "温度传感器", port: 502, protocol: "modbus-tcp" }
-    ],
-    currentAgingProcess: undefined,
-    logs: [
-      { timestamp: 0, content: "工位初始化完成" },
-      { timestamp: 5, content: "部分设备离线" },
-      { timestamp: 10, content: "等待设备连接" },
-      { timestamp: 15, content: "工位处于待机状态" }
-    ],
-    temperature: 25.0,
-    voltage: 220,
-    uptime: "0h 0m",
-    importantPoints: [
-      { name: "温度", value: 25.0, unit: "°C", normalRange: [60, 75] },
-      { name: "电压", value: 220, unit: "V", normalRange: [210, 230] },
-      { name: "风扇转速", value: 0, unit: "RPM", normalRange: [1000, 3000] },
-      { name: "运行状态", value: false, unit: "", normalRange: [1, 1] }
-    ]
+    onlineDevices: 2
   },
 ];
 
@@ -145,125 +73,281 @@ const getStatusIcon = (status: string) => {
     case 'passed': return <CheckCircle className="h-4 w-4" />;
     case 'failed': return <XCircle className="h-4 w-4" />;
     case 'stopped': return <StopCircle className="h-4 w-4" />;
-    default: return <StopCircle className="h-4 w-4" />;
+    default: return <PauseCircle className="h-4 w-4" />;
   }
 };
 
 const OperatorDashboard = () => {
-  const [selectedWorkstation, setSelectedWorkstation] = useState<any>(null);
-  
-  // 统计工位状态
-  const runningCount = mockWorkstations.filter(ws => ws.status === 'running').length;
-  const passedCount = mockWorkstations.filter(ws => ws.status === 'passed').length;
-  const failedCount = mockWorkstations.filter(ws => ws.status === 'failed').length;
-  const stoppedCount = mockWorkstations.filter(ws => ws.status === 'stopped').length;
-  
-  const handleViewDetails = (workstation: any) => {
-    setSelectedWorkstation(workstation);
-  };
-
-  const handleCloseDetails = () => {
-    setSelectedWorkstation(null);
-  };
-  
   return (
-    <>
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">工作中</CardTitle>
-              <Play className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{runningCount}</div>
-              <p className="text-xs text-muted-foreground">正在运行的工位</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">成功</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{passedCount}</div>
-              <p className="text-xs text-muted-foreground">老化完成的工位</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">失败</CardTitle>
-              <XCircle className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{failedCount}</div>
-              <p className="text-xs text-muted-foreground">老化失败的工位</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">工位总数</CardTitle>
-              <Monitor className="h-4 w-4 text-gray-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mockWorkstations.length}</div>
-              <p className="text-xs text-muted-foreground">所有工位</p>
-            </CardContent>
-          </Card>
-        </div>
-
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader>
-            <CardTitle>工位监控</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">在线设备</CardTitle>
+            <Wifi className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {mockWorkstations.map((workstation) => (
-                <div key={workstation.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-3 h-3 rounded-full ${getStatusColor(workstation.status)}`}></div>
-                    <span className="font-medium">{workstation.name}</span>
-                    <div className="flex space-x-2">
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                        {workstation.onlineDevices}/{workstation.devices} 设备在线
-                      </span>
-                      <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                        {workstation.availableProcesses} 流程可用
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {getStatusIcon(workstation.status)}
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleViewDetails(workstation)}
-                    >
-                      详情
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <div className="text-2xl font-bold">8/10</div>
+            <p className="text-xs text-muted-foreground">设备连接状态</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">可用工位</CardTitle>
+            <Link className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">3/4</div>
+            <p className="text-xs text-muted-foreground">满足设备要求</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">运行中流程</CardTitle>
+            <Play className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">2</div>
+            <p className="text-xs text-muted-foreground">并行老化流程</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">系统健康</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">正常</div>
+            <p className="text-xs text-muted-foreground">所有服务运行中</p>
           </CardContent>
         </Card>
       </div>
-      
-      {selectedWorkstation && (
-        <WorkstationDetailView 
-          workstation={selectedWorkstation} 
-          onClose={handleCloseDetails} 
-        />
-      )}
-    </>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>工位监控</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {mockWorkstations.map((workstation) => (
+              <div key={workstation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className={`w-3 h-3 rounded-full ${getStatusColor(workstation.status)}`}></div>
+                  <span className="font-medium">{workstation.name}</span>
+                  <div className="flex space-x-2">
+                    <Badge variant="secondary">
+                      {workstation.onlineDevices}/{workstation.devices} 设备在线
+                    </Badge>
+                    <Badge variant="outline">
+                      {workstation.availableProcesses} 流程可用
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {getStatusIcon(workstation.status)}
+                  <Button size="sm">详情</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const EngineerDashboard = () => {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>设备-工位-老化关系管理</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <Wifi className="h-5 w-5 text-blue-500" />
+                <span className="font-medium">设备配置</span>
+              </div>
+              <p className="text-sm text-muted-foreground">配置 Modbus/CAN 设备连接参数</p>
+              <Button variant="outline" size="sm" className="mt-2">配置设备</Button>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <Link className="h-5 w-5 text-green-500" />
+                <span className="font-medium">工位映射</span>
+              </div>
+              <p className="text-sm text-muted-foreground">将设备映射到工位</p>
+              <Button variant="outline" size="sm" className="mt-2">管理映射</Button>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <Settings className="h-5 w-5 text-purple-500" />
+                <span className="font-medium">老化配置</span>
+              </div>
+              <p className="text-sm text-muted-foreground">为工位配置老化流程</p>
+              <Button variant="outline" size="sm" className="mt-2">配置流程</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>关系验证</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <span>工位 A1 - 所有设备在线，2个流程可用</span>
+              <CheckCircle className="h-5 w-5 text-green-500" />
+            </div>
+            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+              <span>工位 C3 - 设备离线，无法启动老化流程</span>
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const AdminDashboard = () => {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>系统监控中心</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <h3 className="font-medium">设备总数</h3>
+              <p className="text-2xl font-bold">10</p>
+            </div>
+            <div className="p-4 bg-muted rounded-lg">
+              <h3 className="font-medium">工位总数</h3>
+              <p className="text-2xl font-bold">4</p>
+            </div>
+            <div className="p-4 bg-muted rounded-lg">
+              <h3 className="font-medium">老化流程</h3>
+              <p className="text-2xl font-bold">3</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>关系统计</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 border rounded-lg">
+              <h4 className="font-medium mb-2">设备-工位映射</h4>
+              <p>8/10 设备已映射到工位</p>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <h4 className="font-medium mb-2">工位-老化映射</h4>
+              <p>4/4 工位配置了老化流程</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const AnalystDashboard = () => {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>关系数据分析</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
+            <p className="text-muted-foreground">设备-工位-老化关系图谱</p>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>配置有效性分析</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <p>• 工位 A1: 配置完整，运行正常</p>
+            <p>• 工位 B2: 配置完整，运行正常</p>
+            <p>• 工位 C3: 设备离线，配置无效</p>
+            <p>• 工位 D4: 部分设备离线，流程受限</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
 const Index = () => {
+  const [activeRole, setActiveRole] = useState('operator');
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'operator': return <Monitor className="h-4 w-4" />;
+      case 'engineer': return <Settings className="h-4 w-4" />;
+      case 'admin': return <Users className="h-4 w-4" />;
+      case 'analyst': return <BarChart3 className="h-4 w-4" />;
+      default: return <Monitor className="h-4 w-4" />;
+    }
+  };
+
+  const renderDashboard = () => {
+    switch (activeRole) {
+      case 'operator': return <OperatorDashboard />;
+      case 'engineer': return <EngineerDashboard />;
+      case 'admin': return <AdminDashboard />;
+      case 'analyst': return <AnalystDashboard />;
+      default: return <OperatorDashboard />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <div className="border-b">
+        <div className="container mx-auto py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">老化管理系统</h1>
+            <div className="flex items-center space-x-4">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              <span className="text-sm">系统运行正常</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div className="container mx-auto py-6">
-        <OperatorDashboard />
+        <Tabs value={activeRole} onValueChange={setActiveRole} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="operator" className="flex items-center space-x-2">
+              {getRoleIcon('operator')}
+              <span>操作员</span>
+            </TabsTrigger>
+            <TabsTrigger value="engineer" className="flex items-center space-x-2">
+              {getRoleIcon('engineer')}
+              <span>工程师</span>
+            </TabsTrigger>
+            <TabsTrigger value="admin" className="flex items-center space-x-2">
+              {getRoleIcon('admin')}
+              <span>管理员</span>
+            </TabsTrigger>
+            <TabsTrigger value="analyst" className="flex items-center space-x-2">
+              {getRoleIcon('analyst')}
+              <span>分析师</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {renderDashboard()}
       </div>
       
       <MadeWithDyad />
