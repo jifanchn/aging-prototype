@@ -61,40 +61,84 @@ def report_to_mes():
 # 调用上报函数
 report_to_mes()`);
 
+  const [recordScript, setRecordScript] = useState(`# 记录日志到磁盘
+# 在进入 fail, end, success 状态时自动执行
+
+record_to_disk(
+    system.log, 
+    system.record, 
+    dev1.get("sn"), 
+    system.get_state(), 
+    system.start_time
+)`);
+
   const handleSaveScript = () => {
     // In a real implementation, this would save to backend
     showSuccess('MES上报脚本保存成功');
+  };
+
+  const handleSaveRecordScript = () => {
+    // In a real implementation, this would save to backend
+    showSuccess('记录日志脚本保存成功');
   };
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>MES上报配置</CardTitle>
+          <CardTitle>MES上报与日志记录配置</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="bg-muted/30 p-4 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                在进入 <code className="bg-muted px-1 rounded">fail</code>, <code className="bg-muted px-1 rounded">end</code>, <code className="bg-muted px-1 rounded">success</code> 状态时，会自动执行此Python脚本进行上报操作。
-              </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left side - Record to disk function */}
+            <div className="space-y-4">
+              <div className="bg-muted/30 p-4 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  在进入 <code className="bg-muted px-1 rounded">fail</code>, <code className="bg-muted px-1 rounded">end</code>, <code className="bg-muted px-1 rounded">success</code> 状态时，会自动执行此Python脚本进行日志记录操作。
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>记录日志到磁盘</Label>
+                <Textarea
+                  value={recordScript}
+                  onChange={(e) => setRecordScript(e.target.value)}
+                  rows={8}
+                  className="font-mono text-sm"
+                  placeholder="编写记录日志Python脚本..."
+                />
+              </div>
+              
+              <Button onClick={handleSaveRecordScript} className="w-full">
+                <Save className="mr-2 h-4 w-4" />
+                保存记录脚本
+              </Button>
             </div>
-            
-            <div className="space-y-2">
-              <Label>Python上报脚本</Label>
-              <Textarea
-                value={mesScript}
-                onChange={(e) => setMesScript(e.target.value)}
-                rows={15}
-                className="font-mono text-sm"
-                placeholder="编写MES上报Python脚本..."
-              />
+
+            {/* Right side - MES reporting function */}
+            <div className="space-y-4">
+              <div className="bg-muted/30 p-4 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  在进入 <code className="bg-muted px-1 rounded">fail</code>, <code className="bg-muted px-1 rounded">end</code>, <code className="bg-muted px-1 rounded">success</code> 状态时，会自动执行此Python脚本进行上报操作。
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Python上报脚本</Label>
+                <Textarea
+                  value={mesScript}
+                  onChange={(e) => setMesScript(e.target.value)}
+                  rows={15}
+                  className="font-mono text-sm"
+                  placeholder="编写MES上报Python脚本..."
+                />
+              </div>
+              
+              <Button onClick={handleSaveScript} className="w-full">
+                <Save className="mr-2 h-4 w-4" />
+                保存上报脚本
+              </Button>
             </div>
-            
-            <Button onClick={handleSaveScript} className="w-full">
-              <Save className="mr-2 h-4 w-4" />
-              保存上报脚本
-            </Button>
           </div>
         </CardContent>
       </Card>
