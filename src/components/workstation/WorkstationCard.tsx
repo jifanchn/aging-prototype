@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -9,8 +9,15 @@ import {
   XCircle,
   PauseCircle,
   StopCircle,
-  Info
+  Info,
+  MoreVertical
 } from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 interface WorkstationCardProps {
   id: number;
@@ -74,6 +81,31 @@ const WorkstationCard = ({
   onDetailsClick, 
   onActionClick 
 }: WorkstationCardProps) => {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Get available actions based on status
+  const getAvailableActions = () => {
+    const actions = [];
+    
+    if (status === 'stopped' || status === 'failed') {
+      actions.push({ label: '启动', value: 'start', icon: Play });
+    }
+    
+    if (status === 'running' || status === 'paused') {
+      actions.push({ label: '停止', value: 'stop', icon: StopCircle });
+    }
+    
+    if (status === 'running') {
+      actions.push({ label: '标记失败', value: 'fail', icon: XCircle });
+    }
+    
+    actions.push({ label: '删除工位', value: 'delete', icon: XCircle });
+    
+    return actions;
+  };
+
+  const availableActions = getAvailableActions();
+
   return (
     <Card className={`hover:shadow-lg transition-shadow ${getStatusColorClass(status)}`}>
       <CardHeader className="pb-2">
@@ -150,33 +182,30 @@ const WorkstationCard = ({
           >
             详情
           </Button>
-          <Button 
-            size="sm" 
-            onClick={() => {
-              // 根据状态确定可用的操作
-              const actions = [];
-              if (status === 'stopped' || status === 'failed') {
-                actions.push('start');
-              }
-              if (status === 'running' || status === 'paused') {
-                actions.push('stop');
-              }
-              if (status === 'running') {
-                actions.push('fail');
-              }
-              actions.push('delete');
-              
-              // 显示操作选择对话框
-              const action = window.prompt(
-                `选择操作:\n${actions.map(a => `- ${a}`).join('\n')}`
-              );
-              if (action && actions.includes(action)) {
-                onActionClick(action as any);
-              }
-            }}
-          >
-            操作
-          </Button>
+          <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {availableActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <DropdownMenuItem
+                    key={action.value}
+                    onClick={() => {
+                      onActionClick(action.value as any);
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    <Icon className="h-4 w-4 mr-2" />
+                    {action.label}
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardContent>
     </Card>
