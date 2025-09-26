@@ -31,30 +31,29 @@ const WorkstationManagement = () => {
       </div>
       
       <div className="container mx-auto py-6">
-        <Card className="w-full">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <CardHeader>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="overview" className="py-2">工位概览</TabsTrigger>
-                <TabsTrigger value="device-pairing" className="py-2">工位-设备配对</TabsTrigger>
-                <TabsTrigger value="aging-pairing" className="py-2">工位-老化配对</TabsTrigger>
-              </TabsList>
-            </CardHeader>
-            <CardContent>
-              <TabsContent value="overview" className="mt-0">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="overview" className="py-2">工位概览</TabsTrigger>
+            <TabsTrigger value="device-pairing" className="py-2">工位-设备配对</TabsTrigger>
+            <TabsTrigger value="aging-pairing" className="py-2">工位-老化配对</TabsTrigger>
+          </TabsList>
+
+          <Card className="w-full">
+            <CardContent className="p-0">
+              <TabsContent value="overview" className="p-0">
                 <WorkstationOverview />
               </TabsContent>
               
-              <TabsContent value="device-pairing" className="mt-0">
+              <TabsContent value="device-pairing" className="p-0">
                 <WorkstationDevicePairing />
               </TabsContent>
               
-              <TabsContent value="aging-pairing" className="mt-0">
+              <TabsContent value="aging-pairing" className="p-0">
                 <WorkstationAgingPairing />
               </TabsContent>
             </CardContent>
-          </Tabs>
-        </Card>
+          </Card>
+        </Tabs>
       </div>
       
       <MadeWithDyad />
