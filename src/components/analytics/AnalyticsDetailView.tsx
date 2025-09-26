@@ -32,6 +32,13 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 interface AgingLog {
   id: string;
@@ -40,6 +47,10 @@ interface AgingLog {
   endTime: string | null;
   status: 'completed' | 'failed' | 'running';
   workstation: string;
+  logs: Array<{
+    timestamp: number;
+    content: string;
+  }>;
   importantPoints: Array<{
     name: string;
     value: number | boolean;
@@ -435,31 +446,68 @@ const AnalyticsDetailView = ({ log, onClose }: AnalyticsDetailViewProps) => {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label>选择要显示的变量</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                      {uniquePoints.map((pointName) => (
-                        <div key={pointName} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`point-${pointName}`}
-                            checked={selectedPoints.includes(pointName)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedPoints([...selectedPoints, pointName]);
-                              } else {
-                                setSelectedPoints(selectedPoints.filter(name => name !== pointName));
-                              }
-                            }}
-                          />
-                          <Label htmlFor={`point-${pointName}`} className="text-sm">
-                            {pointName}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                          {selectedPoints.length > 0 
+                            ? `${selectedPoints.length} 个变量已选中` 
+                            : '选择变量'}
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56 max-h-60 overflow-y-auto">
+                        <DropdownMenuLabel>可用变量</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {uniquePoints.map((pointName) => (
+                          <div key={pointName} className="flex items-center space-x-2 px-2 py-1 hover:bg-muted cursor-pointer">
+                            <Checkbox
+                              id={`point-${pointName}`}
+                              checked={selectedPoints.includes(pointName)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedPoints([...selectedPoints, pointName]);
+                                } else {
+                                  setSelectedPoints(selectedPoints.filter(name => name !== pointName));
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`point-${pointName}`} className="text-sm cursor-pointer flex-1">
+                              {pointName}
+                            </Label>
+                          </div>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                   
                   <p className="text-xs text-muted-foreground">
                     重要参数已默认选中，可添加其他可用变量
                   </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Logs display */}
+            <Card>
+              <CardHeader>
+                <CardTitle>运行日志</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-h-40 overflow-y-auto font-mono text-sm">
+                  {log.logs && log.logs.length > 0 ? (
+                    log.logs.map((logEntry, index) => (
+                      <div key={index} className="flex">
+                        <div className="w-20 flex-shrink-0 text-right pr-4 text-muted-foreground">
+                          [{logEntry.timestamp.toString().padStart(5, '0')}s]
+                        </div>
+                        <div className="flex-1">
+                          {logEntry.content}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-muted-foreground">无日志记录</div>
+                  )}
                 </div>
               </CardContent>
             </Card>

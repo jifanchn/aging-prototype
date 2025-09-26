@@ -32,6 +32,13 @@ const mockAgingLogs = [
     endTime: '2025-08-10T12:00:00', 
     status: 'completed', 
     workstation: '工位 A1',
+    logs: [
+      { timestamp: 0, content: "老化测试开始" },
+      { timestamp: 30, content: "设备连接正常" },
+      { timestamp: 60, content: "温度达到设定值 65°C" },
+      { timestamp: 120, content: "电压稳定在 220V" },
+      { timestamp: 180, content: "老化测试完成，结果通过" }
+    ],
     importantPoints: [
       { name: 'temperature', value: 65.5, unit: '°C', normalRange: [60, 75] },
       { name: 'voltage', value: 220, unit: 'V', normalRange: [210, 230] },
@@ -55,6 +62,13 @@ const mockAgingLogs = [
     endTime: '2025-08-10T13:30:00', 
     status: 'failed', 
     workstation: '工位 B2',
+    logs: [
+      { timestamp: 0, content: "老化测试开始" },
+      { timestamp: 20, content: "所有设备在线" },
+      { timestamp: 45, content: "温度异常升高至 85°C" },
+      { timestamp: 60, content: "触发高温保护" },
+      { timestamp: 75, content: "老化测试失败 - 温度超限" }
+    ],
     importantPoints: [
       { name: 'temperature', value: 85.2, unit: '°C', normalRange: [60, 75] },
       { name: 'voltage', value: 215, unit: 'V', normalRange: [210, 230] }
@@ -74,6 +88,13 @@ const mockAgingLogs = [
     endTime: null, 
     status: 'running', 
     workstation: '工位 C3',
+    logs: [
+      { timestamp: 0, content: "老化测试开始" },
+      { timestamp: 15, content: "设备连接正常" },
+      { timestamp: 30, content: "温度正在上升" },
+      { timestamp: 45, content: "当前温度: 58.1°C" },
+      { timestamp: 60, content: "继续监控中..." }
+    ],
     importantPoints: [
       { name: 'temperature', value: 58.1, unit: '°C', normalRange: [60, 75] },
       { name: 'voltage', value: 210, unit: 'V', normalRange: [210, 230] },
@@ -93,6 +114,13 @@ const mockAgingLogs = [
     endTime: '2025-08-11T15:00:00', 
     status: 'completed', 
     workstation: '工位 D4',
+    logs: [
+      { timestamp: 0, content: "老化测试开始" },
+      { timestamp: 25, content: "设备初始化完成" },
+      { timestamp: 50, content: "温湿度监测正常" },
+      { timestamp: 120, content: "老化过程稳定" },
+      { timestamp: 240, content: "老化测试完成，结果通过" }
+    ],
     importantPoints: [
       { name: 'temperature', value: 70.2, unit: '°C', normalRange: [60, 75] },
       { name: 'voltage', value: 219, unit: 'V', normalRange: [210, 230] },
@@ -112,6 +140,13 @@ const mockAgingLogs = [
     endTime: null, 
     status: 'running', 
     workstation: '工位 A1',
+    logs: [
+      { timestamp: 0, content: "老化测试开始" },
+      { timestamp: 10, content: "设备连接正常" },
+      { timestamp: 20, content: "当前温度: 45.0°C" },
+      { timestamp: 30, content: "继续升温中..." },
+      { timestamp: 40, content: "监控电压稳定性" }
+    ],
     importantPoints: [
       { name: 'temperature', value: 45.0, unit: '°C', normalRange: [60, 75] },
       { name: 'voltage', value: 220, unit: 'V', normalRange: [210, 230] }
