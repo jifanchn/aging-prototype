@@ -39,6 +39,7 @@ interface Workstation {
     unit: string;
     normalRange: [number, number];
   }>;
+  infoMessage?: string;
 }
 
 // Mock data for workstations with logs
@@ -67,7 +68,8 @@ const mockWorkstations: Workstation[] = [
       { name: "电压", value: 220, unit: "V", normalRange: [210, 230] },
       { name: "电流", value: 2.3, unit: "A", normalRange: [2, 3] },
       { name: "运行状态", value: true, unit: "", normalRange: [1, 1] }
-    ]
+    ],
+    infoMessage: "温度监控中 - 65.5°C"
   },
   { 
     id: 2, 
@@ -94,7 +96,8 @@ const mockWorkstations: Workstation[] = [
       { name: "电压", value: 219, unit: "V", normalRange: [210, 230] },
       { name: "湿度", value: 45, unit: "%", normalRange: [30, 60] },
       { name: "运行状态", value: false, unit: "", normalRange: [1, 1] }
-    ]
+    ],
+    infoMessage: "老化测试完成"
   },
   { 
     id: 3, 
@@ -117,7 +120,8 @@ const mockWorkstations: Workstation[] = [
       { name: "电压", value: 210, unit: "V", normalRange: [210, 230] },
       { name: "压力", value: 1.2, unit: "bar", normalRange: [1, 2] },
       { name: "运行状态", value: true, unit: "", normalRange: [1, 1] }
-    ]
+    ],
+    infoMessage: "设备连接异常"
   },
   { 
     id: 4, 
@@ -141,7 +145,8 @@ const mockWorkstations: Workstation[] = [
       { name: "电压", value: 220, unit: "V", normalRange: [210, 230] },
       { name: "风扇转速", value: 0, unit: "RPM", normalRange: [1000, 3000] },
       { name: "运行状态", value: false, unit: "", normalRange: [1, 1] }
-    ]
+    ],
+    infoMessage: "等待设备连接"
   },
 ];
 
@@ -164,6 +169,17 @@ const getStatusIcon = (status: string) => {
     case 'stopped': return <StopCircle className="h-4 w-4 text-gray-500" />;
     case 'paused': return <PauseCircle className="h-4 w-4 text-yellow-500" />;
     default: return <StopCircle className="h-4 w-4 text-gray-500" />;
+  }
+};
+
+const getStatusColorClass = (status: string) => {
+  switch (status) {
+    case 'running': return 'border-l-blue-500';
+    case 'passed': return 'border-l-green-500';
+    case 'failed': return 'border-l-red-500';
+    case 'stopped': return 'border-l-gray-500';
+    case 'paused': return 'border-l-yellow-500';
+    default: return 'border-l-gray-300';
   }
 };
 
@@ -248,15 +264,20 @@ const Dashboard = () => {
           <CardContent>
             <div className="space-y-4">
               {mockWorkstations.map((workstation) => (
-                <div key={workstation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div key={workstation.id} className={`flex items-center justify-between p-4 border rounded-lg ${getStatusColorClass(workstation.status)}`}>
                   <div className="flex items-center space-x-4">
                     <div className={`w-3 h-3 rounded-full ${getStatusColor(workstation.status)}`}></div>
                     <div className="flex flex-col">
                       <span className="font-medium">{workstation.name}</span>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        最新日志: {workstation.logs.length > 0 ? 
-                          `${workstation.logs[workstation.logs.length - 1].timestamp}s: ${workstation.logs[workstation.logs.length - 1].content}` 
-                          : '无日志'}
+                      <div className="flex mt-2 space-x-4">
+                        <div className="text-xs text-muted-foreground">
+                          <span className="font-medium">信息:</span> {workstation.infoMessage || '-'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          <span className="font-medium">最新日志:</span> {workstation.logs.length > 0 ? 
+                            `${workstation.logs[workstation.logs.length - 1].timestamp}s: ${workstation.logs[workstation.logs.length - 1].content}` 
+                            : '无日志'}
+                        </div>
                       </div>
                     </div>
                   </div>
