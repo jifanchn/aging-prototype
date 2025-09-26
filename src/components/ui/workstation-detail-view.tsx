@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Workstation {
   id: number;
@@ -212,17 +211,21 @@ const WorkstationDetailView = ({ workstation, onClose }: WorkstationDetailViewPr
               </CardContent>
             </Card>
 
-            {/* Logs */}
+            {/* Logs - Fixed two-column alignment with fixed width timestamp */}
             <Card>
               <CardHeader>
                 <CardTitle>运行日志</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
+                <div className="space-y-2 max-h-40 overflow-y-auto font-mono text-sm">
                   {workstation.logs.map((log, index) => (
-                    <div key={index} className="text-sm">
-                      <span className="text-muted-foreground mr-2">[{log.timestamp}s]</span>
-                      {log.content}
+                    <div key={index} className="flex">
+                      <div className="w-20 flex-shrink-0 text-right pr-4 text-muted-foreground">
+                        [{log.timestamp.toString().padStart(5, '0')}s]
+                      </div>
+                      <div className="flex-1">
+                        {log.content}
+                      </div>
                     </div>
                   ))}
                 </div>
