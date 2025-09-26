@@ -101,9 +101,10 @@ const WorkstationDetailView = ({ workstation, onClose }: WorkstationDetailViewPr
           </Button>
         </div>
         
-        <ScrollArea className="flex-1 p-6 pt-0">
+        {/* Fixed scrolling container */}
+        <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
-            {/* Status and Basic Info */}
+            {/* Status and Basic Info - Added mt-0 since it's the first element */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
                 <CardHeader>
@@ -228,7 +229,7 @@ const WorkstationDetailView = ({ workstation, onClose }: WorkstationDetailViewPr
               </CardContent>
             </Card>
           </div>
-        </ScrollArea>
+        </div>
       </div>
     </div>
   );
