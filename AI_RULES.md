@@ -6,7 +6,7 @@
 - Always put source code in the src folder.
 - Put pages into src/pages/
 - Put components into src/components/
-- If a page has tags, separate into src/
+- If a page has tags, separate into src/components/{page}/tag.tsx
 - The main page (default page) is src/pages/Index.tsx
 - UPDATE the main page to include the new components. OTHERWISE, the user can NOT see any components!
 - ALWAYS try to use the shadcn/ui library.
