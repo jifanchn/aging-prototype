@@ -24,9 +24,8 @@ def report_to_mes():
     temperature = dev1.get("temperature")
     voltage = dev1.get("voltage") 
     
-    # 获取记录数据
-    csv_data = system.record["csv"]
-    json_data = system.record["json"]
+    # 获取记录数据 (JSON格式)
+    record_data = system.record
     
     # 获取会话ID
     session_id = system.session_id
@@ -42,10 +41,7 @@ def report_to_mes():
             "temperature": temperature,
             "voltage": voltage
         },
-        "record_data": {
-            "csv": csv_data,
-            "json": json_data
-        }
+        "record_data": record_data
     }
     
     # 发送HTTP请求到MES

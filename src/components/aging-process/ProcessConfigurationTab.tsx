@@ -33,7 +33,7 @@ system.session_id        # 当前老化会话的唯一标识符 (UUID)
 system.label             # 当前工位显示的状态标签 (可读写)
 system.logs              # 运行日志列表: [[时间戳, "日志内容"], ...]
 system.debug_logs        # 调试日志列表: [[时间戳, "调试信息"], ...]
-system.record            # 记录数据: {"csv": "time,temp,voltage\\n1,25.5,220\\n2,26.0,221", "json": [{"time": 1, "temp": 25.5, "voltage": 220}, {"time": 2, "temp": 26.0, "voltage": 221}]}
+system.record            # 记录数据: [{"time": 1, "temp": 25.5, "voltage": 220}, {"time": 2, "temp": 26.0, "voltage": 221}]
 
 system.log("message")    # 记录普通日志信息
 system.debug("message")  # 记录调试信息 (仅在调试模式下显示)
@@ -80,9 +80,8 @@ elif dev1.get("voltage") < 200:
     jumpstate("pause")
 
 # 示例5: 访问记录数据
-csv_data = system.record["csv"]
-json_data = system.record["json"]
-system.debug(f"记录数据点数: {len(json_data)}")
+record_data = system.record
+system.debug(f"记录数据点数: {len(record_data)}")
 
 # 示例6: 完整的状态处理逻辑
 current_temp = dev1.get("temperature")
