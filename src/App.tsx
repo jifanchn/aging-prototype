@@ -31,87 +31,87 @@ const AppContent = () => (
   <TooltipProvider>
     <Toaster />
     <Sonner />
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route 
-          path="/" 
-          element={
-            <ProtectedRoute>
-              <>
-                <Navbar />
-                <Dashboard />
-              </>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/workstations" 
-          element={
-            <ProtectedRoute>
-              <>
-                <Navbar />
-                <WorkstationManagement />
-              </>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/protocols" 
-          element={
-            <ProtectedRoute>
-              <>
-                <Navbar />
-                <ProtocolManagement />
-              </>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/aging-processes" 
-          element={
-            <ProtectedRoute>
-              <>
-                <Navbar />
-                <AgingProcessManagement />
-              </>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/analytics" 
-          element={
-            <ProtectedRoute>
-              <>
-                <Navbar />
-                <Analytics />
-              </>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/system" 
-          element={
-            <ProtectedRoute>
-              <>
-                <Navbar />
-                <SystemManagement />
-              </>
-            </ProtectedRoute>
-          } 
-        />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <Dashboard />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/workstations" 
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <WorkstationManagement />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/protocols" 
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <ProtocolManagement />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/aging-processes" 
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <AgingProcessManagement />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/analytics" 
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <Analytics />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/system" 
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <SystemManagement />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   </TooltipProvider>
 );
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <AppContent />
   </QueryClientProvider>
 );
 
