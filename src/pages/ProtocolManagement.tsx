@@ -28,10 +28,7 @@ const ProtocolManagement = () => {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">协议通信管理</h1>
             <div className="flex items-center space-x-2">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                新建配置
-              </Button>
+              {/* Removed the "新建配置" button as requested */}
             </div>
           </div>
         </div>
