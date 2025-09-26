@@ -1,107 +1,148 @@
-"use client";
-
-import React from 'react';
-import { 
-  Monitor, 
-  Settings, 
-  Cpu, 
-  BarChart3,
-  Users,
-  Home,
-  ChevronDown
-} from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { 
+import {
+  Home,
+  Monitor,
+  Settings,
+  FileText,
+  Users,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const Navbar = () => {
-  const navigate = useNavigate();
+const navItems = [
+  { name: "仪表盘", href: "/", icon: Home },
+  { name: "工位管理", href: "/workstations", icon: Monitor },
+  { name: "协议管理", href: "/protocols", icon: Settings },
+  { name: "老化流程", href: "/aging-processes", icon: FileText },
+  { name: "数据分析", href: "/analytics", icon: FileText },
+  { name: "系统管理", href: "/system", icon: Users },
+];
+
+export default function Navbar() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, logout } = useAuth();
 
-  const navItems = [
-    { name: '仪表板', icon: Home, path: '/' },
-    { name: '工位管理', icon: Monitor, path: '/workstations' },
-    { name: '协议管理', icon: Cpu, path: '/protocols' },
-    { name: '老化流程', icon: Settings, path: '/aging-processes' },
-    { name: '数据分析', icon: BarChart3, path: '/analytics' },
-    { name: '系统管理', icon: Users, path: '/system' },
-  ];
+  if (!user) {
+    return null;
+  }
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
+  const getRoleDisplayName = (role: string) => {
+    switch (role) {
+      case 'admin': return '管理员';
+      case 'viewer': return '查看员';
+      case 'operator': return '操作员';
+      case 'maintainer': return '维护员';
+      default: return role;
+    }
   };
 
   return (
-    <nav className="border-b bg-background">
+    <nav className="border-b">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-8">
-            <Button 
-              variant="ghost" 
-              className="text-xl font-bold"
-              onClick={() => navigate('/')}
-            >
-              FlexAge
-            </Button>
-            
-            <div className="hidden md:flex items-center space-x-2">
+          <div className="flex items-center space-x-4">
+            <Link to="/" className="font-bold text-xl">
+              老化测试系统
+            </Link>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Button
+                  key={item.href}
+                  variant={location.pathname === item.href ? "default" : "ghost"}
+                  size="sm"
+                  asChild
+                >
+                  <Link to={item.href} className="flex items-center space-x-2">
+                    <Icon className="h-4 w-4" />
+                    <span>{item.name}</span>
+                  </Link>
+                </Button>
+              );
+            })}
+          </div>
+
+          {/* User Profile Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="" alt={user.username} />
+                  <AvatarFallback>
+                    {user.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <div className="flex flex-col space-y-1 p-2">
+                <div className="font-medium">{user.username}</div>
+                <div className="text-sm text-muted-foreground">
+                  {getRoleDisplayName(user.role)}
+                </div>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={logout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>退出登录</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Mobile menu button */}
+          <Button
+            variant="ghost"
+            className="md:hidden"
+            size="sm"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t">
+            <div className="flex flex-col space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Button
-                    key={item.name}
-                    variant={isActive(item.path) ? "default" : "ghost"}
-                    className="flex items-center space-x-2"
-                    onClick={() => navigate(item.path)}
+                    key={item.href}
+                    variant={location.pathname === item.href ? "default" : "ghost"}
+                    size="sm"
+                    className="justify-start"
+                    asChild
+                    onClick={() => setIsMenuOpen(false)}
                   >
-                    <Icon className="h-4 w-4" />
-                    <span>{item.name}</span>
+                    <Link to={item.href} className="flex items-center space-x-2">
+                      <Icon className="h-4 w-4" />
+                      <span>{item.name}</span>
+                    </Link>
                   </Button>
                 );
               })}
             </div>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="hidden md:block">
-              <div className="flex items-center space-x-2 text-sm">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <span>系统运行正常</span>
-              </div>
-            </div>
-            
-            {/* Mobile menu dropdown */}
-            <div className="md:hidden">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {navItems.map((item) => (
-                    <DropdownMenuItem 
-                      key={item.name}
-                      onClick={() => navigate(item.path)}
-                      className={isActive(item.path) ? "bg-accent" : ""}
-                    >
-                      <item.icon className="h-4 w-4 mr-2" />
-                      {item.name}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </nav>
   );
-};
-
-export default Navbar;
+}
