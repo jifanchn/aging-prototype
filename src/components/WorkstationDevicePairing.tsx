@@ -295,43 +295,9 @@ const WorkstationDevicePairing = () => {
             <div className="space-y-4">
               {pairings.map((pairing) => (
                 <div key={pairing.id} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-lg mb-3">{getWorkstationName(pairing.workstationId)}</h3>
-                      <div className="space-y-2">
-                        {pairing.deviceInstances.map(device => (
-                          <div key={device.id} className="bg-muted/50 rounded p-2 flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm truncate">{device.name || `${getDeviceTypeName(device.deviceTypeId)} ${device.ip}`}</div>
-                              <div className="text-xs text-muted-foreground truncate">
-                                {getDeviceTypeName(device.deviceTypeId)} | {device.ip}:{device.port}
-                              </div>
-                            </div>
-                            <div className="flex space-x-1 ml-2 flex-shrink-0">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEditDevice(pairing.id, device)}
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeleteDevice(pairing.id, device.id)}
-                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-3">
-                        创建时间: {pairing.createdAt}
-                      </div>
-                    </div>
-                    <div className="ml-4 flex-shrink-0">
+                  <div className="flex flex-col">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-medium text-lg">{getWorkstationName(pairing.workstationId)}</h3>
                       <Button
                         variant="outline"
                         size="sm"
@@ -341,6 +307,38 @@ const WorkstationDevicePairing = () => {
                         <Trash2 className="h-3 w-3 mr-1" />
                         删除配对
                       </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {pairing.deviceInstances.map(device => (
+                        <div key={device.id} className="bg-muted/50 rounded p-2 flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm truncate">{device.name || `${getDeviceTypeName(device.deviceTypeId)} ${device.ip}`}</div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {getDeviceTypeName(device.deviceTypeId)} | {device.ip}:{device.port}
+                            </div>
+                          </div>
+                          <div className="flex space-x-1 ml-2 flex-shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditDevice(pairing.id, device)}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteDevice(pairing.id, device.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-3">
+                      创建时间: {pairing.createdAt}
                     </div>
                   </div>
                 </div>
