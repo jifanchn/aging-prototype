@@ -29,6 +29,7 @@ interface DeviceInstance {
   deviceTypeId: string;
   ip: string;
   port: number;
+  otherParams: string; // Added otherParams field
   name?: string;
 }
 
@@ -59,8 +60,8 @@ const WorkstationDevicePairing = () => {
       id: 'pair1', 
       workstationId: 'ws1', 
       deviceInstances: [
-        { id: 'dev1', deviceTypeId: 'type1', ip: '192.168.1.101', port: 502, name: '温度传感器 A1' },
-        { id: 'dev2', deviceTypeId: 'type2', ip: '192.168.1.102', port: 502, name: '电压监测器 B2' }
+        { id: 'dev1', deviceTypeId: 'type1', ip: '192.168.1.101', port: 502, otherParams: '', name: '温度传感器 A1' },
+        { id: 'dev2', deviceTypeId: 'type2', ip: '192.168.1.102', port: 502, otherParams: '', name: '电压监测器 B2' }
       ], 
       createdAt: '2025-08-10' 
     },
@@ -68,15 +69,15 @@ const WorkstationDevicePairing = () => {
       id: 'pair2', 
       workstationId: 'ws2', 
       deviceInstances: [
-        { id: 'dev3', deviceTypeId: 'type1', ip: '192.168.1.103', port: 502, name: '温度传感器 C3' },
-        { id: 'dev4', deviceTypeId: 'type2', ip: '192.168.1.104', port: 502, name: '电压监测器 D4' },
-        { id: 'dev5', deviceTypeId: 'type4', ip: '192.168.1.105', port: 0, name: 'Agave TH E5' }
+        { id: 'dev3', deviceTypeId: 'type1', ip: '192.168.1.103', port: 502, otherParams: 'baud=9600,parity=none', name: '温度传感器 C3' },
+        { id: 'dev4', deviceTypeId: 'type2', ip: '192.168.1.104', port: 502, otherParams: '', name: '电压监测器 D4' },
+        { id: 'dev5', deviceTypeId: 'type4', ip: '192.168.1.105', port: 0, otherParams: 'device_id=AGV001,model=TH2023', name: 'Agave TH E5' }
       ], 
       createdAt: '2025-08-11' 
     }
   ]);
 
-  const [newPairing, setNewPairing] = useState({ workstationId: '', deviceTypeId: '', ip: '', port: 502 });
+  const [newPairing, setNewPairing] = useState({ workstationId: '', deviceTypeId: '', ip: '', port: 502, otherParams: '' }); // Added otherParams
   const [isEditing, setIsEditing] = useState(false);
   const [editingPairingId, setEditingPairingId] = useState('');
   const [editingDeviceId, setEditingDeviceId] = useState('');
@@ -119,6 +120,7 @@ const WorkstationDevicePairing = () => {
                     deviceTypeId: newPairing.deviceTypeId, 
                     ip: newPairing.ip, 
                     port: selectedDeviceType?.protocol === 'custom' ? 0 : newPairing.port,
+                    otherParams: newPairing.otherParams, // Include otherParams
                     name: `${getDeviceTypeName(newPairing.deviceTypeId)} ${newPairing.ip.split('.').pop()}`
                   }
                 : device
@@ -135,6 +137,7 @@ const WorkstationDevicePairing = () => {
         deviceTypeId: newPairing.deviceTypeId,
         ip: newPairing.ip,
         port: selectedDeviceType?.protocol === 'custom' ? 0 : newPairing.port,
+        otherParams: newPairing.otherParams, // Include otherParams
         name: `${getDeviceTypeName(newPairing.deviceTypeId)} ${newPairing.ip ? newPairing.ip.split('.').pop() : 'Custom'}`
       };
 
@@ -163,7 +166,7 @@ const WorkstationDevicePairing = () => {
   };
 
   const resetForm = () => {
-    setNewPairing({ workstationId: '', deviceTypeId: '', ip: '', port: 502 });
+    setNewPairing({ workstationId: '', deviceTypeId: '', ip: '', port: 502, otherParams: '' });
     setIsEditing(false);
     setEditingPairingId('');
     setEditingDeviceId('');
@@ -174,7 +177,8 @@ const WorkstationDevicePairing = () => {
       workstationId: pairings.find(p => p.id === pairingId)?.workstationId || '', 
       deviceTypeId: device.deviceTypeId, 
       ip: device.ip, 
-      port: device.port 
+      port: device.port,
+      otherParams: device.otherParams // Load otherParams when editing
     });
     setIsEditing(true);
     setEditingPairingId(pairingId);
@@ -286,6 +290,22 @@ const WorkstationDevicePairing = () => {
             </div>
           </div>
 
+          {/* Added otherParams field - takes full width */}
+          <div className="space-y-2">
+            <label htmlFor="otherParams" className="text-sm font-medium">其他参数 (可选)</label>
+            <input
+              id="otherParams"
+              type="text"
+              className="px-3 py-2 border rounded-md bg-background w-full"
+              placeholder="例如: baud=9600,parity=none 或 device_id=AGV001,model=TH2023"
+              value={newPairing.otherParams}
+              onChange={(e) => setNewPairing({ ...newPairing, otherParams: e.target.value })}
+            />
+            <p className="text-xs text-muted-foreground">
+              用于传递设备特定的其他参数，格式为键值对，如: key1=value1,key2=value2
+            </p>
+          </div>
+
           <div className="flex space-x-2 pt-4">
             <Button onClick={handleAddDeviceToPairing} className="flex-1" disabled={!newPairing.workstationId || !newPairing.deviceTypeId}>
               {isEditing ? (
@@ -340,6 +360,7 @@ const WorkstationDevicePairing = () => {
                             {deviceTypes.find(dt => dt.id === device.deviceTypeId)?.protocol === 'custom' 
                               ? '自定义设备类型' 
                               : `${device.ip}:${device.port}`}
+                            {device.otherParams && ` | ${device.otherParams}`}
                           </div>
                         </div>
                         <div className="flex space-x-1 flex-shrink-0 ml-4">
