@@ -14,7 +14,7 @@ import { showSuccess, showError } from "@/utils/toast";
 interface DeviceType {
   id: string;
   name: string;
-  protocol: string;
+  protocol: 'modbus-tcp' | 'custom';
   description: string;
 }
 
@@ -51,7 +51,7 @@ const WorkstationDevicePairing = () => {
     { id: 'type1', name: '温度传感器', protocol: 'modbus-tcp', description: '用于监测温度' },
     { id: 'type2', name: '电压监测器', protocol: 'modbus-tcp', description: '用于监测电压' },
     { id: 'type3', name: '湿度传感器', protocol: 'modbus-tcp', description: '用于监测湿度' },
-    { id: 'type4', name: '功率计', protocol: 'modbus-rtu', description: '用于监测功率' }
+    { id: 'type4', name: 'Agave TH', protocol: 'custom', description: '预定义的温度湿度传感器' }
   ]);
 
   const [pairings, setPairings] = useState<DevicePairing[]>([
@@ -70,7 +70,7 @@ const WorkstationDevicePairing = () => {
       deviceInstances: [
         { id: 'dev3', deviceTypeId: 'type1', ip: '192.168.1.103', port: 502, name: '温度传感器 C3' },
         { id: 'dev4', deviceTypeId: 'type2', ip: '192.168.1.104', port: 502, name: '电压监测器 D4' },
-        { id: 'dev5', deviceTypeId: 'type3', ip: '192.168.1.105', port: 502, name: '湿度传感器 E5' }
+        { id: 'dev5', deviceTypeId: 'type4', ip: '192.168.1.105', port: 0, name: 'Agave TH E5' }
       ], 
       createdAt: '2025-08-11' 
     }
@@ -90,15 +90,24 @@ const WorkstationDevicePairing = () => {
   };
 
   const handleAddDeviceToPairing = () => {
-    if (!newPairing.workstationId || !newPairing.deviceTypeId || !newPairing.ip) {
+    if (!newPairing.workstationId || !newPairing.deviceTypeId) {
       showError('请填写完整信息');
       return;
+    }
+
+    // For custom device types, IP and port are not required
+    const selectedDeviceType = deviceTypes.find(dt => dt.id === newPairing.deviceTypeId);
+    if (selectedDeviceType?.protocol === 'modbus-tcp') {
+      if (!newPairing.ip) {
+        showError('Modbus TCP设备需要填写IP地址');
+        return;
+      }
     }
 
     const existingPairing = pairings.find(p => p.workstationId === newPairing.workstationId);
     
     if (isEditing && editingDeviceId) {
-      // 编辑现有设备实例
+      // Edit existing device instance
       setPairings(pairings.map(pairing => {
         if (pairing.id === editingPairingId) {
           return {
@@ -109,7 +118,7 @@ const WorkstationDevicePairing = () => {
                     ...device, 
                     deviceTypeId: newPairing.deviceTypeId, 
                     ip: newPairing.ip, 
-                    port: newPairing.port,
+                    port: selectedDeviceType?.protocol === 'custom' ? 0 : newPairing.port,
                     name: `${getDeviceTypeName(newPairing.deviceTypeId)} ${newPairing.ip.split('.').pop()}`
                   }
                 : device
@@ -120,24 +129,24 @@ const WorkstationDevicePairing = () => {
       }));
       showSuccess('设备实例更新成功');
     } else {
-      // 添加新设备实例
+      // Add new device instance
       const deviceInstance: DeviceInstance = {
         id: `dev-${Date.now()}`,
         deviceTypeId: newPairing.deviceTypeId,
         ip: newPairing.ip,
-        port: newPairing.port,
-        name: `${getDeviceTypeName(newPairing.deviceTypeId)} ${newPairing.ip.split('.').pop()}`
+        port: selectedDeviceType?.protocol === 'custom' ? 0 : newPairing.port,
+        name: `${getDeviceTypeName(newPairing.deviceTypeId)} ${newPairing.ip ? newPairing.ip.split('.').pop() : 'Custom'}`
       };
 
       if (existingPairing) {
-        // 更新现有配对
+        // Update existing pairing
         setPairings(pairings.map(pairing => 
           pairing.id === existingPairing.id 
             ? { ...pairing, deviceInstances: [...pairing.deviceInstances, deviceInstance] }
             : pairing
         ));
       } else {
-        // 创建新配对
+        // Create new pairing
         const newPairingObj: DevicePairing = {
           id: `pairing-${Date.now()}`,
           workstationId: newPairing.workstationId,
@@ -149,7 +158,7 @@ const WorkstationDevicePairing = () => {
       showSuccess('设备实例添加成功');
     }
 
-    // 重置表单
+    // Reset form
     resetForm();
   };
 
@@ -178,7 +187,7 @@ const WorkstationDevicePairing = () => {
         if (pairing.id === pairingId) {
           const updatedDevices = pairing.deviceInstances.filter(d => d.id !== deviceId);
           if (updatedDevices.length === 0) {
-            // 如果没有设备了，删除整个配对
+            // If no devices left, delete the entire pairing
             return null;
           }
           return { ...pairing, deviceInstances: updatedDevices };
@@ -227,12 +236,20 @@ const WorkstationDevicePairing = () => {
                 id="deviceTypeSelect"
                 className="px-3 py-2 border rounded-md bg-background w-full"
                 value={newPairing.deviceTypeId}
-                onChange={(e) => setNewPairing({ ...newPairing, deviceTypeId: e.target.value })}
+                onChange={(e) => {
+                  const deviceTypeId = e.target.value;
+                  setNewPairing({ ...newPairing, deviceTypeId });
+                  // Clear IP/port when switching to custom device type
+                  const selectedDeviceType = deviceTypes.find(dt => dt.id === deviceTypeId);
+                  if (selectedDeviceType?.protocol === 'custom') {
+                    setNewPairing(prev => ({ ...prev, ip: '', port: 0 }));
+                  }
+                }}
               >
                 <option value="">选择设备类型</option>
                 {deviceTypes.map(deviceType => (
                   <option key={deviceType.id} value={deviceType.id}>
-                    {deviceType.name} ({deviceType.protocol})
+                    {deviceType.name} ({deviceType.protocol === 'modbus-tcp' ? 'Modbus TCP' : '自定义设备类型'})
                   </option>
                 ))}
               </select>
@@ -241,30 +258,36 @@ const WorkstationDevicePairing = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label htmlFor="ipAddress" className="text-sm font-medium">IP 地址 *</label>
+              <label htmlFor="ipAddress" className="text-sm font-medium">
+                IP 地址 {deviceTypes.find(dt => dt.id === newPairing.deviceTypeId)?.protocol === 'modbus-tcp' ? '*' : '(可选)'}
+              </label>
               <input
                 id="ipAddress"
                 type="text"
                 className="px-3 py-2 border rounded-md bg-background w-full"
-                placeholder="192.168.1.xxx"
+                placeholder={deviceTypes.find(dt => dt.id === newPairing.deviceTypeId)?.protocol === 'custom' ? '自定义设备无需IP' : '192.168.1.xxx'}
                 value={newPairing.ip}
                 onChange={(e) => setNewPairing({ ...newPairing, ip: e.target.value })}
+                disabled={deviceTypes.find(dt => dt.id === newPairing.deviceTypeId)?.protocol === 'custom'}
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="port" className="text-sm font-medium">端口 *</label>
+              <label htmlFor="port" className="text-sm font-medium">
+                端口 {deviceTypes.find(dt => dt.id === newPairing.deviceTypeId)?.protocol === 'modbus-tcp' ? '*' : '(可选)'}
+              </label>
               <input
                 id="port"
                 type="number"
                 className="px-3 py-2 border rounded-md bg-background w-full"
                 value={newPairing.port}
                 onChange={(e) => setNewPairing({ ...newPairing, port: parseInt(e.target.value) || 502 })}
+                disabled={deviceTypes.find(dt => dt.id === newPairing.deviceTypeId)?.protocol === 'custom'}
               />
             </div>
           </div>
 
           <div className="flex space-x-2 pt-4">
-            <Button onClick={handleAddDeviceToPairing} className="flex-1" disabled={!newPairing.workstationId || !newPairing.deviceTypeId || !newPairing.ip}>
+            <Button onClick={handleAddDeviceToPairing} className="flex-1" disabled={!newPairing.workstationId || !newPairing.deviceTypeId}>
               {isEditing ? (
                 <Edit className="mr-2 h-4 w-4" />
               ) : (
@@ -313,7 +336,10 @@ const WorkstationDevicePairing = () => {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm truncate">{device.name || `${getDeviceTypeName(device.deviceTypeId)} ${device.ip}`}</div>
                           <div className="text-xs text-muted-foreground truncate">
-                            {getDeviceTypeName(device.deviceTypeId)} | {device.ip}:{device.port}
+                            {getDeviceTypeName(device.deviceTypeId)} | 
+                            {deviceTypes.find(dt => dt.id === device.deviceTypeId)?.protocol === 'custom' 
+                              ? '自定义设备类型' 
+                              : `${device.ip}:${device.port}`}
                           </div>
                         </div>
                         <div className="flex space-x-1 flex-shrink-0 ml-4">

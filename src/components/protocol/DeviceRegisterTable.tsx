@@ -39,7 +39,7 @@ interface DeviceRegisterTable {
 interface DeviceType {
   id: string;
   name: string;
-  protocol: string;
+  protocol: 'modbus-tcp' | 'custom';
 }
 
 const DeviceRegisterTable = () => {
@@ -125,7 +125,7 @@ const DeviceRegisterTable = () => {
   const [deviceTypes] = useState<DeviceType[]>([
     { id: 'type1', name: '温度传感器', protocol: 'modbus-tcp' },
     { id: 'type2', name: '电力监测器', protocol: 'modbus-tcp' },
-    { id: 'type3', name: 'Agave TH', protocol: 'agave-th' },
+    { id: 'type3', name: 'Agave TH', protocol: 'custom' },
     { id: 'type4', name: '自定义协议设备', protocol: 'custom' }
   ]);
 
@@ -228,18 +228,12 @@ const DeviceRegisterTable = () => {
 
   // Mock data for non-Modbus TCP device types
   const getNonModbusDataFields = (protocol: string) => {
-    if (protocol === 'agave-th') {
+    if (protocol === 'custom') {
       return [
         { name: 'temperature', type: 'float32', description: '温度值 (°C)' },
         { name: 'humidity', type: 'float32', description: '湿度值 (%)' },
         { name: 'battery', type: 'uint16', description: '电池电量 (%)' },
         { name: 'rssi', type: 'int16', description: '信号强度 (dBm)' }
-      ];
-    } else if (protocol === 'custom') {
-      return [
-        { name: 'status', type: 'bool', description: '设备状态' },
-        { name: 'value', type: 'float32', description: '测量值' },
-        { name: 'timestamp', type: 'uint32', description: '时间戳' }
       ];
     }
     return [];
@@ -281,7 +275,7 @@ const DeviceRegisterTable = () => {
               <SelectContent>
                 {deviceTypes.map(type => (
                   <SelectItem key={type.id} value={type.id}>
-                    {type.name} ({type.protocol})
+                    {type.name} ({type.protocol === 'modbus-tcp' ? 'Modbus TCP' : '自定义设备类型'})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -292,7 +286,7 @@ const DeviceRegisterTable = () => {
             <div className="space-y-4">
               <div className="p-4 bg-muted/30 rounded-lg">
                 <p className="text-sm text-muted-foreground">
-                  {activeDeviceType.name} 使用 {activeDeviceType.protocol} 协议，不支持寄存器映射配置。
+                  {activeDeviceType.name} 使用自定义设备类型，不支持寄存器映射配置。
                   以下是该设备类型支持的数据字段：
                 </p>
               </div>

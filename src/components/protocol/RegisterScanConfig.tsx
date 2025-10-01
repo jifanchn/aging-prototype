@@ -24,6 +24,7 @@ interface RegisterScanConfig {
 interface DeviceType {
   id: string;
   name: string;
+  protocol: 'modbus-tcp' | 'custom';
 }
 
 const RegisterScanConfig = () => {
@@ -51,9 +52,13 @@ const RegisterScanConfig = () => {
   ]);
 
   const [deviceTypes] = useState<DeviceType[]>([
-    { id: 'type1', name: '温度传感器' },
-    { id: 'type2', name: '电力监测器' }
+    { id: 'type1', name: '温度传感器', protocol: 'modbus-tcp' },
+    { id: 'type2', name: '电力监测器', protocol: 'modbus-tcp' },
+    { id: 'type3', name: 'Agave TH', protocol: 'custom' }
   ]);
+
+  // Filter out custom device types for scan configuration
+  const modbusDeviceTypes = deviceTypes.filter(type => type.protocol === 'modbus-tcp');
 
   const [newScanConfig, setNewScanConfig] = useState<Omit<RegisterScanConfig, 'id'>>({
     deviceTypeId: '',
@@ -122,7 +127,7 @@ const RegisterScanConfig = () => {
                   <SelectValue placeholder="选择设备类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  {deviceTypes.map(type => (
+                  {modbusDeviceTypes.map(type => (
                     <SelectItem key={type.id} value={type.id}>
                       {type.name}
                     </SelectItem>
@@ -220,7 +225,7 @@ const RegisterScanConfig = () => {
             <TableBody>
               {scanConfigs.map((config) => (
                 <TableRow key={config.id}>
-                  <TableCell>{deviceTypes.find(t => t.id === config.deviceTypeId)?.name || '未知'}</TableCell>
+                  <TableCell>{modbusDeviceTypes.find(t => t.id === config.deviceTypeId)?.name || '未知'}</TableCell>
                   <TableCell>{getRegisterTypeName(config.registerType)}</TableCell>
                   <TableCell>{config.startAddress} - {config.endAddress}</TableCell>
                   <TableCell>{config.slaveId}</TableCell>
@@ -243,6 +248,22 @@ const RegisterScanConfig = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {deviceTypes.some(type => type.protocol === 'custom') && (
+        <Card>
+          <CardHeader>
+            <CardTitle>自定义设备类型说明</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted/20 p-4 rounded-lg">
+              <p className="text-sm">
+                自定义设备类型（如Agave TH）由后端直接实现，具有固定的数据字段结构，不需要配置寄存器扫描。
+                这些设备的数据采集由后端自动管理，无需手动配置扫描参数。
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

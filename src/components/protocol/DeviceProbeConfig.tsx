@@ -22,6 +22,7 @@ interface DeviceProbeConfig {
 interface DeviceType {
   id: string;
   name: string;
+  protocol: 'modbus-tcp' | 'custom';
 }
 
 const DeviceProbeConfig = () => {
@@ -43,9 +44,9 @@ const DeviceProbeConfig = () => {
   ]);
 
   const [deviceTypes] = useState<DeviceType[]>([
-    { id: 'type1', name: '温度传感器' },
-    { id: 'type2', name: '电力监测器' },
-    { id: 'type3', name: '压力传感器' }
+    { id: 'type1', name: '温度传感器', protocol: 'modbus-tcp' },
+    { id: 'type2', name: '电力监测器', protocol: 'modbus-tcp' },
+    { id: 'type3', name: 'Agave TH', protocol: 'custom' }
   ]);
 
   const [newProbeConfig, setNewProbeConfig] = useState<Omit<DeviceProbeConfig, 'id' | 'createdAt'>>({
@@ -54,9 +55,12 @@ const DeviceProbeConfig = () => {
     description: ''
   });
 
-  // 确保每个设备类型都有Probe条件
+  // Filter out custom device types for probe configuration
+  const modbusDeviceTypes = deviceTypes.filter(type => type.protocol === 'modbus-tcp');
+
+  // Ensure each Modbus device type has Probe condition
   useEffect(() => {
-    const missingTypes = deviceTypes.filter(type => 
+    const missingTypes = modbusDeviceTypes.filter(type => 
       !probeConfigs.some(config => config.deviceTypeId === type.id)
     );
     
@@ -71,7 +75,7 @@ const DeviceProbeConfig = () => {
       
       setProbeConfigs(prev => [...prev, ...newConfigs]);
     }
-  }, [deviceTypes, probeConfigs]);
+  }, [modbusDeviceTypes, probeConfigs]);
 
   const handleAddOrUpdateProbeConfig = () => {
     if (!newProbeConfig.deviceTypeId || !newProbeConfig.probeScript) {
@@ -82,7 +86,7 @@ const DeviceProbeConfig = () => {
     const existingIndex = probeConfigs.findIndex(config => config.deviceTypeId === newProbeConfig.deviceTypeId);
     
     if (existingIndex >= 0) {
-      // 更新现有配置
+      // Update existing configuration
       const updatedConfigs = [...probeConfigs];
       updatedConfigs[existingIndex] = {
         ...updatedConfigs[existingIndex],
@@ -92,7 +96,7 @@ const DeviceProbeConfig = () => {
       setProbeConfigs(updatedConfigs);
       showSuccess('设备Probe条件更新成功');
     } else {
-      // 添加新配置
+      // Add new configuration
       const probeConfig: DeviceProbeConfig = {
         id: `probe-${Date.now()}`,
         ...newProbeConfig,
@@ -110,7 +114,7 @@ const DeviceProbeConfig = () => {
   };
 
   const handleDeleteProbeConfig = (id: string) => {
-    // 不允许删除设备类型的Probe条件，只能更新
+    // Don't allow deletion of device type Probe conditions, only update
     showError('设备Probe条件不能删除，只能更新');
   };
 
@@ -137,7 +141,7 @@ const DeviceProbeConfig = () => {
                 value={newProbeConfig.deviceTypeId}
                 onValueChange={(value) => {
                   setNewProbeConfig({ ...newProbeConfig, deviceTypeId: value });
-                  // 自动填充描述
+                  // Auto-fill description
                   const deviceType = getDeviceTypeById(value);
                   if (deviceType && !newProbeConfig.description) {
                     setNewProbeConfig(prev => ({ ...prev, description: `${deviceType.name}在线条件` }));
@@ -148,7 +152,7 @@ const DeviceProbeConfig = () => {
                   <SelectValue placeholder="选择设备类型" />
                 </SelectTrigger>
                 <SelectContent>
-                  {deviceTypes.map(type => (
+                  {modbusDeviceTypes.map(type => (
                     <SelectItem key={type.id} value={type.id}>
                       {type.name}
                     </SelectItem>
@@ -262,6 +266,22 @@ const DeviceProbeConfig = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {deviceTypes.some(type => type.protocol === 'custom') && (
+        <Card>
+          <CardHeader>
+            <CardTitle>自定义设备类型说明</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted/20 p-4 rounded-lg">
+              <p className="text-sm">
+                自定义设备类型（如Agave TH）由后端直接实现，具有固定的数据字段结构，不需要配置Probe条件。
+                这些设备的在线状态由后端自动管理，无需手动配置Probe脚本。
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

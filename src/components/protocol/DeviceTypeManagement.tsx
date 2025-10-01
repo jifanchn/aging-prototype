@@ -22,7 +22,7 @@ import {
 interface DeviceType {
   id: string;
   name: string;
-  protocol: 'modbus-tcp'; // 只保留Modbus TCP
+  protocol: 'modbus-tcp' | 'custom'; // Added custom protocol type
   description: string;
   createdAt: string;
 }
@@ -43,6 +43,13 @@ const DeviceTypeManagement = () => {
       protocol: 'modbus-tcp',
       description: '支持电压、电流、功率监测的Modbus TCP设备',
       createdAt: '2025-08-11'
+    },
+    {
+      id: 'type3',
+      name: 'Agave TH',
+      protocol: 'custom',
+      description: '预定义的Agave温度湿度传感器，包含固定数据字段',
+      createdAt: '2025-08-12'
     }
   ]);
 
@@ -189,6 +196,19 @@ const DeviceTypeManagement = () => {
     setIsCopyModalOpen(true);
   };
 
+  // Get fixed data fields for custom device types
+  const getCustomDeviceFields = (protocol: string) => {
+    if (protocol === 'custom') {
+      return [
+        { name: 'temperature', type: 'float32', description: '温度值 (°C)' },
+        { name: 'humidity', type: 'float32', description: '湿度值 (%)' },
+        { name: 'battery', type: 'uint16', description: '电池电量 (%)' },
+        { name: 'rssi', type: 'int16', description: '信号强度 (dBm)' }
+      ];
+    }
+    return [];
+  };
+
   return (
     <div className="space-y-6">
       {/* Hidden file input for import */}
@@ -218,12 +238,15 @@ const DeviceTypeManagement = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="protocol">通信协议</Label>
-                <Input
+                <select
                   id="protocol"
-                  value="Modbus TCP"
-                  readOnly
-                  className="bg-muted cursor-not-allowed"
-                />
+                  className="px-3 py-2 border rounded-md bg-background w-full"
+                  value={newDeviceType.protocol}
+                  onChange={(e) => setNewDeviceType({ ...newDeviceType, protocol: e.target.value as any })}
+                >
+                  <option value="modbus-tcp">Modbus TCP</option>
+                  <option value="custom">自定义设备类型</option>
+                </select>
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="description">描述</Label>
@@ -269,7 +292,9 @@ const DeviceTypeManagement = () => {
               {deviceTypes.map((type) => (
                 <TableRow key={type.id}>
                   <TableCell className="font-medium">{type.name}</TableCell>
-                  <TableCell>{type.protocol.toUpperCase()}</TableCell>
+                  <TableCell>
+                    {type.protocol === 'modbus-tcp' ? 'Modbus TCP' : '自定义设备类型'}
+                  </TableCell>
                   <TableCell className="max-w-xs truncate" title={type.description}>
                     {type.description}
                   </TableCell>
@@ -318,6 +343,45 @@ const DeviceTypeManagement = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Display fixed data fields for custom device types */}
+      {deviceTypes.some(type => type.protocol === 'custom') && (
+        <Card>
+          <CardHeader>
+            <CardTitle>自定义设备类型数据字段</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              自定义设备类型具有预定义的数据字段，无需配置寄存器映射、扫描或Probe条件。
+            </p>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>设备类型</TableHead>
+                  <TableHead>字段名称</TableHead>
+                  <TableHead>数据类型</TableHead>
+                  <TableHead>描述</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {deviceTypes
+                  .filter(type => type.protocol === 'custom')
+                  .map(type => 
+                    getCustomDeviceFields(type.protocol).map((field, index) => (
+                      <TableRow key={`${type.id}-${index}`}>
+                        <TableCell className="font-medium">{type.name}</TableCell>
+                        <TableCell>{field.name}</TableCell>
+                        <TableCell>{field.type.toUpperCase()}</TableCell>
+                        <TableCell>{field.description}</TableCell>
+                      </TableRow>
+                    ))
+                  )
+                }
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Copy Device Type Modal */}
       <Dialog open={isCopyModalOpen} onOpenChange={setIsCopyModalOpen}>
