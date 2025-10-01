@@ -9,6 +9,7 @@ import {
 import WorkstationOverview from "@/components/workstation/WorkstationOverview";
 import WorkstationDevicePairing from "@/components/workstation/WorkstationDevicePairing";
 import WorkstationAgingPairing from "@/components/workstation/WorkstationAgingPairing";
+import GlobalDevicesTab from "@/components/workstation/GlobalDevicesTab";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showSuccess } from "@/utils/toast";
@@ -31,13 +32,16 @@ const WorkstationManagement = () => {
       
       <div className="container mx-auto py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid grid-cols-3 w-full">
+          <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="overview">工位概览</TabsTrigger>
             {hasPermission('edit_device_pairing') && (
               <TabsTrigger value="device-pairing">工位-设备配对</TabsTrigger>
             )}
             {hasPermission('edit_aging_pairing') && (
               <TabsTrigger value="aging-pairing">工位-老化配对</TabsTrigger>
+            )}
+            {hasPermission('edit_device_pairing') && (
+              <TabsTrigger value="global-devices">全局设备</TabsTrigger>
             )}
           </TabsList>
           
@@ -54,6 +58,12 @@ const WorkstationManagement = () => {
           {hasPermission('edit_aging_pairing') && (
             <TabsContent value="aging-pairing">
               <WorkstationAgingPairing />
+            </TabsContent>
+          )}
+          
+          {hasPermission('edit_device_pairing') && (
+            <TabsContent value="global-devices">
+              <GlobalDevicesTab />
             </TabsContent>
           )}
         </Tabs>
